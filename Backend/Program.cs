@@ -2,8 +2,12 @@ using System.Data;
 using Npgsql;
 using DbUp;  
 using System.Reflection;
+using DotNetEnv;
+
+Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddEnvironmentVariables();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
