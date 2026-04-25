@@ -1,0 +1,19 @@
+# .NET
+bin/
+obj/
+publish/
+.vs/
+.vscode/
+*.user
+*.suo
+# Node.js (React)
+node_modules/
+dist/
+.eslintcache
+*.log
+# Docker & OS
+.env
+.DS_Store
+Thumbs.db
+# Database Data
+/db_data/

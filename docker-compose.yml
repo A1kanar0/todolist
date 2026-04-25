@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: todo_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secret_password
+      POSTGRES_DB: todo_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  backend:
+    build: 
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: todo_backend
+    ports:
+      - "5000:8080"
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=db;Database=todo_db;Username=admin;Password=secret_password"
+    depends_on:
+      - db
+
+  frontend:
+    build: ./Frontend
+    container_name: todo_frontend
+    ports:
+      - "3000:5173"
+    volumes:
+      - ./Frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  db_data:
