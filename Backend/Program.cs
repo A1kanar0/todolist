@@ -3,6 +3,12 @@ using Npgsql;
 using DbUp;  
 using System.Reflection;
 using DotNetEnv;
+using Backend.Repositories;
+using Backend.Services;
+using Backend.Data;
+using Backend.GraphQL.Types;
+using Backend.GraphQL.Queries;
+using Backend.GraphQL.Mutations;
 
 Env.Load();
 
@@ -37,11 +43,23 @@ if (upgrader.IsUpgradeRequired())
 // dapper
 builder.Services.AddScoped<IDbConnection>(sp =>
     new NpgsqlConnection(connectionString));
+Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
 // GraphQL
 builder.Services
     .AddGraphQLServer()
-    .AddQueryType<Backend.GraphQL.Query>();
+    .AddQueryType(q => q.Name("Query"))
+    .AddMutationType(m => m.Name("Mutation"))
+
+    .AddTypeExtension<UserQueries>()
+    .AddTypeExtension<UserMutations>()
+
+    .AddType<UserType>();
+
+// DI
+builder.Services.AddSingleton<DatabaseContext>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
 
