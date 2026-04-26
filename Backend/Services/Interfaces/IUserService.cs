@@ -10,4 +10,5 @@ public interface IUserService
     Task<int> CreateUserAsync(User user);
     Task<bool> UpdateUserAsync(User user);
     Task<User?> AuthenticateAsync(string email, string password);
+    string GenerateJwtToken(User user);
 }

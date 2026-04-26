@@ -2,6 +2,7 @@ using Backend.Entities;
 using Backend.Services;
 using HotChocolate;
 using HotChocolate.Types;
+using Backend.GraphQL.Types;
 
 namespace Backend.GraphQL.Mutations;
 
@@ -47,15 +48,16 @@ public class UserMutations
 			   ?? throw new Exception("Користувача не знайдено після оновлення");
 	}
 
-	public async Task<User> LoginAsync(LoginInput input, [Service] IUserService userService)
+	
+	public async Task<LoginResponse> LoginAsync(LoginInput input, [Service] IUserService userService)
 	{
 		var user = await userService.AuthenticateAsync(input.Email, input.Password);
 
 		if (user == null)
-		{
 			throw new GraphQLException("Неправильний Email або пароль");
-		}
 
-		return user;
+		var token = userService.GenerateJwtToken(user);
+
+		return new LoginResponse(user, token);
 	}
 }
