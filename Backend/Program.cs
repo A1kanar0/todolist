@@ -62,7 +62,7 @@ builder.Services
     .AddTypeExtension<NoteMutations>()
 
     .AddType<UserType>()
-    .AddType<NoteType>();
+    .AddType<NoteType>()
 
     .AddAuthorization();
 

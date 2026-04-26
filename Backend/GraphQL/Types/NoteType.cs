@@ -1,5 +1,6 @@
-﻿using HotChocolate.Types;
+using HotChocolate.Types;
 using Backend.Entities;
+using Backend.Services;
 
 namespace Backend.GraphQL.Types;
 
@@ -12,5 +13,20 @@ public class NoteType : ObjectType<Note>
         descriptor.Field(x => x.Title).Type<NonNullType<StringType>>();
         descriptor.Field(x => x.Content).Type<NonNullType<StringType>>();
         descriptor.Field(x => x.CreatedAt).Type<NonNullType<DateTimeType>>();
+
+        descriptor.Field("author")
+            .Type<UserType>()
+            .ResolveWith<NoteResolvers>(r => r.GetAuthorAsync(default!, default!))
+            .Description("Користувач, який є автором цієї нотатки");
+    }
+
+    private class NoteResolvers
+    {
+        public async Task<User?> GetAuthorAsync(
+            [Parent] Note note,
+            [Service] IUserService userService)
+        {
+            return await userService.GetUserByIdAsync(note.AuthorId);
+        }
     }
 }
