@@ -52,14 +52,19 @@ builder.Services
     .AddMutationType(m => m.Name("Mutation"))
 
     .AddTypeExtension<UserQueries>()
+    .AddTypeExtension<NoteQueries>()
     .AddTypeExtension<UserMutations>()
+    .AddTypeExtension<NoteMutations>()
 
-    .AddType<UserType>();
+    .AddType<UserType>()
+    .AddType<NoteType>();
 
 // DI
 builder.Services.AddSingleton<DatabaseContext>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<INoteRepository, NoteRepository>();
+builder.Services.AddScoped<INoteService, NoteService>();
 
 var app = builder.Build();
 
