@@ -17,3 +17,6 @@ dist/
 Thumbs.db
 # Database Data
 /db_data/
+global.json
+.idea/
+*.DotSettings.user
