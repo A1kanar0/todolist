@@ -5,7 +5,7 @@ namespace Backend.GraphQL;
 
 public class Query
 {
-    // Приклад запиту через Dapper
+    // РџСЂРёРєР»Р°Рґ Р·Р°РїРёС‚Сѓ С‡РµСЂРµР· Dapper
     public async Task<IEnumerable<dynamic>> GetHealthCheck([Service] IDbConnection db)
     {
         return await db.QueryAsync("SELECT 1 as status");
