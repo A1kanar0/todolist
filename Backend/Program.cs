@@ -57,9 +57,12 @@ builder.Services
     .AddMutationType(m => m.Name("Mutation"))
 
     .AddTypeExtension<UserQueries>()
+    .AddTypeExtension<NoteQueries>()
     .AddTypeExtension<UserMutations>()
+    .AddTypeExtension<NoteMutations>()
 
     .AddType<UserType>()
+    .AddType<NoteType>();
 
     .AddAuthorization();
 
@@ -95,6 +98,8 @@ builder.Services.AddAuthorization();
 builder.Services.AddSingleton<DatabaseContext>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<INoteRepository, NoteRepository>();
+builder.Services.AddScoped<INoteService, NoteService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 var app = builder.Build();
