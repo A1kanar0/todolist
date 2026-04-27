@@ -69,7 +69,7 @@ builder.Services
     .AddType<UserType>()
     .AddType<NoteType>()
     .AddType<CategoryType>()
-    .AddType<TagType>();
+    .AddType<TagType>()
 
     .AddAuthorization();
 
