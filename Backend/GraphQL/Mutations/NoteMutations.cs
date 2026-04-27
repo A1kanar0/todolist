@@ -33,7 +33,7 @@ public class NoteMutations
             Id = input.Id,
             AuthorId = input.AuthorId ?? 0,
             Title = input.Title ?? string.Empty,
-            Content = input.Content ??  string.Empty
+            Content = input.Content ?? string.Empty
         };
 
         return await noteService.UpdateNoteAsync(noteUpdates, input.TagIds) 
