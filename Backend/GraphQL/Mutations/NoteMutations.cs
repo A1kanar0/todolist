@@ -15,28 +15,28 @@ public class NoteMutations
 {
     public async Task<Note> CreateNoteAsync(CreateNoteInput input, [Service] INoteService noteService)
     {
-        var note = new Note
+        var newNote = new Note
         {
+            AuthorId = input.AuthorId,
             Title = input.Title,
-            Content = input.Content,
-            AuthorId = input.AuthorId
+            Content = input.Content
         };
 
-        return await noteService.CreateNoteAsync(note, input.TagIds) 
+        return await noteService.CreateNoteAsync(newNote, input.TagIds) 
                ?? throw new GraphQLException("Помилка при створенні нотатки");
     }
 
     public async Task<Note> UpdateNoteAsync(UpdateNoteInput input, [Service] INoteService noteService)
     {
-        var note = new Note
+        var noteUpdates = new Note
         {
             Id = input.Id,
-            Title = input.Title,
-            Content = input.Content,
-            AuthorId = input.AuthorId ?? 0 
+            AuthorId = input.AuthorId ?? 0,
+            Title = input.Title ?? String.Empty,
+            Content = input.Content ??  String.Empty
         };
 
-        return await noteService.UpdateNoteAsync(note, input.TagIds) 
+        return await noteService.UpdateNoteAsync(noteUpdates, input.TagIds) 
                ?? throw new GraphQLException("Не вдалося оновити нотатку");
     }
 
