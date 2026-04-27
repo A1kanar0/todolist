@@ -14,6 +14,7 @@ public record LoginInput(string Email, string Password);
 [ExtendObjectType("Mutation")]
 public class UserMutations
 {
+	[Authorize]
 	public async Task<User> CreateUserAsync(CreateUserInput input, [Service] IUserService userService)
 	{
 		var newUser = new User
@@ -26,7 +27,7 @@ public class UserMutations
 		var id = await userService.CreateUserAsync(newUser);
 
 		return await userService.GetUserByIdAsync(id)
-			   ?? throw new Exception("Помилка при отриманні створеного користувача");
+			   ?? throw new GraphQLException("Помилка при отриманні створеного користувача");
 	}
 	[Authorize]
 	public async Task<User> UpdateUserAsync(UpdateUserInput input, [Service] IUserService userService, [Service] ICurrentUserService currentUserService)
@@ -46,14 +47,14 @@ public class UserMutations
 		var isUpdated = await userService.UpdateUserAsync(userUpdates);
 		if (!isUpdated)
 		{
-			throw new Exception("Не вдалося оновити дані користувача");
+			throw new GraphQLException("Не вдалося оновити дані користувача");
 		}
 
 		return await userService.GetUserByIdAsync(userId)
-			   ?? throw new Exception("Користувача не знайдено після оновлення");
+			   ?? throw new GraphQLException("Користувача не знайдено після оновлення");
 	}
 
-	public async Task<LoginResponse> LoginAsync(LoginInput input, [Service] IUserService userService)
+	public async Task<LoginResponse> LoginAsync(LoginInput input, [Service] IUserService userService, [Service] ICurrentUserService currentUserService)
 	{
 		var user = await userService.AuthenticateAsync(input.Email, input.Password);
 
@@ -61,7 +62,15 @@ public class UserMutations
 			throw new GraphQLException("Неправильний Email або пароль");
 
 		var token = userService.GenerateJwtToken(user);
-
+		currentUserService.SetAuthCookie(token);
+		
 		return new LoginResponse(user, token);
+	}
+	
+	[Authorize]
+	public bool Logout([Service] ICurrentUserService currentUserService)
+	{
+		currentUserService.ClearAuthCookie();
+		return true;
 	}
 }
