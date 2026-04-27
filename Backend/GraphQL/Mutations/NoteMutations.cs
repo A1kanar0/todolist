@@ -1,7 +1,8 @@
-﻿using Backend.Entities;
+using Backend.Entities;
 using Backend.Services;
 using HotChocolate;
 using HotChocolate.Types;
+using HotChocolate.Authorization;
 using System;
 using System.Threading.Tasks;
 
@@ -13,11 +14,14 @@ public record UpdateNoteInput(int Id, int? AuthorId, string? Title, string? Cont
 [ExtendObjectType("Mutation")]
 public class NoteMutations
 {
-    public async Task<Note> CreateNoteAsync(CreateNoteInput input, [Service] INoteService noteService)
+    [Authorize]
+    public async Task<Note> CreateNoteAsync(CreateNoteInput input, [Service] INoteService noteService, [Service] ICurrentUserService currentUserService)
     {
+        var userId = currentUserService.UserId
+                     ?? throw new GraphQLException("Користувача не ідентифіковано");
         var newNote = new Note
         {
-            AuthorId = input.AuthorId,
+            AuthorId = userId,
             Title = input.Title,
             Content = input.Content
         };
@@ -26,8 +30,12 @@ public class NoteMutations
                ?? throw new GraphQLException("Помилка при створенні нотатки");
     }
 
-    public async Task<Note> UpdateNoteAsync(UpdateNoteInput input, [Service] INoteService noteService)
+    [Authorize]
+    public async Task<Note> UpdateNoteAsync(UpdateNoteInput input, [Service] INoteService noteService, [Service] ICurrentUserService currentUserService)
     {
+        var userId = currentUserService.UserId
+                     ?? throw new GraphQLException("Користувача не ідентифіковано");
+
         var noteUpdates = new Note
         {
             Id = input.Id,
@@ -40,6 +48,7 @@ public class NoteMutations
                ?? throw new GraphQLException("Не вдалося оновити нотатку");
     }
 
+    [Authorize]
     public async Task<bool> DeleteNoteAsync(int id, [Service] INoteService noteService)
     {
         var isDeleted = await noteService.DeleteNoteAsync(id);

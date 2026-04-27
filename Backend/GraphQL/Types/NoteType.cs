@@ -1,6 +1,7 @@
-﻿using HotChocolate.Types;
+using HotChocolate.Types;
 using Backend.Entities;
 using Backend.GraphQL.Resolvers;
+using Backend.Services;
 
 namespace Backend.GraphQL.Types;
 
