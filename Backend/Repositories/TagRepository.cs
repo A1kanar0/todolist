@@ -54,4 +54,15 @@ public class TagRepository : ITagRepository
         var affectedRows = await connection.ExecuteAsync(sql, new { Id = id });
         return affectedRows > 0;
     }
+    public async Task<IEnumerable<Backend.Entities.Tag>> GetByNoteIdAsync(int noteId)
+    {
+        using var connection = _context.CreateConnection();
+        var sql = """
+                  SELECT t.* FROM tags t
+                  JOIN note_tags nt ON t.Id = nt.tag_id
+                  WHERE nt.note_id = @NoteId
+                  """;
+
+        return await connection.QueryAsync<Backend.Entities.Tag>(sql, new { NoteId = noteId });
+    }
 }

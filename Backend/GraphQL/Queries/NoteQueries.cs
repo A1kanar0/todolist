@@ -14,4 +14,9 @@ public class NoteQueries
     {
         return await noteService.GetAllNotesAsync();
     }
+    public async Task<IEnumerable<Note>> GetNotesByTagAsync(int tagId, [Service] INoteService noteService)
+    {
+        return await noteService.GetNotesByTagIdAsync(tagId)
+               ?? throw new GraphQLException("Нотатки за цим тегом не знайдені");
+    }
 }
