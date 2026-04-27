@@ -1,4 +1,6 @@
 public interface ICurrentUserService
 {
-	int? UserId { get; }
+    int? UserId { get; }
+    void SetAuthCookie(string token);
+    void ClearAuthCookie();
 }
