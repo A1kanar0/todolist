@@ -49,4 +49,8 @@ public class TagService : ITagService
 
         return await _tagRepository.DeleteAsync(id);
     }
+    public async Task<IEnumerable<Backend.Entities.Tag>> GetTagsByNoteIdAsync(int noteId)
+    {
+        return await _tagRepository.GetByNoteIdAsync(noteId);
+    }
 }

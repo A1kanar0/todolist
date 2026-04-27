@@ -7,36 +7,36 @@ using System.Threading.Tasks;
 
 namespace Backend.GraphQL.Mutations;
 
-public record CreateNoteInput(int AuthorId, string Title, string Content);
-public record UpdateNoteInput(int Id, int AuthorId, string Title, string Content);
+public record CreateNoteInput(int AuthorId, string Title, string Content, List<int>? TagIds);
+public record UpdateNoteInput(int Id, int? AuthorId, string? Title, string? Content, List<int>? TagIds);
 
 [ExtendObjectType("Mutation")]
 public class NoteMutations
 {
     public async Task<Note> CreateNoteAsync(CreateNoteInput input, [Service] INoteService noteService)
     {
-        var newNote = new Note
+        var note = new Note
         {
-            AuthorId = input.AuthorId,
             Title = input.Title,
-            Content = input.Content
+            Content = input.Content,
+            AuthorId = input.AuthorId
         };
 
-        return await noteService.CreateNoteAsync(newNote)
+        return await noteService.CreateNoteAsync(note, input.TagIds) 
                ?? throw new GraphQLException("Помилка при створенні нотатки");
     }
 
     public async Task<Note> UpdateNoteAsync(UpdateNoteInput input, [Service] INoteService noteService)
     {
-        var noteUpdates = new Note
+        var note = new Note
         {
             Id = input.Id,
-            AuthorId = input.AuthorId,
-            Title = input.Title ?? string.Empty,
-            Content = input.Content ?? string.Empty
+            Title = input.Title,
+            Content = input.Content,
+            AuthorId = input.AuthorId ?? 0 
         };
 
-        return await noteService.UpdateNoteAsync(noteUpdates)
+        return await noteService.UpdateNoteAsync(note, input.TagIds) 
                ?? throw new GraphQLException("Не вдалося оновити нотатку");
     }
 
@@ -51,4 +51,28 @@ public class NoteMutations
 
         return true;
     }
+    public async Task<bool> AddTagToNoteAsync(int noteId, int tagId, [Service] INoteService noteService)
+    {
+        var result = await noteService.AddTagToNoteAsync(noteId, tagId);
+        
+        if (!result)
+        {
+            throw new GraphQLException("Не вдалося додати тег до нотатки");
+        }
+        
+        return true;
+    }
+    public async Task<bool> RemoveTagFromNoteAsync(int noteId, int tagId, [Service] INoteService noteService)
+    {
+        var result = await noteService.RemoveTagFromNoteAsync(noteId, tagId);
+        
+        if (!result)
+        {
+            throw new GraphQLException("Не вдалося видалити тег з нотатки");
+        }
+        
+        return true;
+    }
+    
+    
 }
