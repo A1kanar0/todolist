@@ -58,11 +58,18 @@ builder.Services
 
     .AddTypeExtension<UserQueries>()
     .AddTypeExtension<NoteQueries>()
+    .AddTypeExtension<CategoryQueries>()
+    .AddTypeExtension<TagQueries>()
+    
     .AddTypeExtension<UserMutations>()
     .AddTypeExtension<NoteMutations>()
+    .AddTypeExtension<CategoryMutations>()
+    .AddTypeExtension<TagMutations>()
 
     .AddType<UserType>()
     .AddType<NoteType>()
+    .AddType<CategoryType>()
+    .AddType<TagType>();
 
     .AddAuthorization();
 
@@ -114,6 +121,10 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<INoteRepository, NoteRepository>();
 builder.Services.AddScoped<INoteService, NoteService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<ITagRepository, TagRepository>();
+builder.Services.AddScoped<ITagService, TagService>();
 
 var app = builder.Build();
 app.UseAuthentication();
