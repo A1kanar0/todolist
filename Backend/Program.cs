@@ -54,14 +54,17 @@ builder.Services
     .AddTypeExtension<UserQueries>()
     .AddTypeExtension<NoteQueries>()
     .AddTypeExtension<CategoryQueries>()
+    .AddTypeExtension<TagQueries>()
     
     .AddTypeExtension<UserMutations>()
     .AddTypeExtension<NoteMutations>()
     .AddTypeExtension<CategoryMutations>()
+    .AddTypeExtension<TagMutations>()
 
     .AddType<UserType>()
     .AddType<NoteType>()
-    .AddType<CategoryType>();
+    .AddType<CategoryType>()
+    .AddType<TagType>();
 
 // DI
 builder.Services.AddSingleton<DatabaseContext>();
@@ -71,6 +74,8 @@ builder.Services.AddScoped<INoteRepository, NoteRepository>();
 builder.Services.AddScoped<INoteService, NoteService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<ITagRepository, TagRepository>();
+builder.Services.AddScoped<ITagService, TagService>();
 
 var app = builder.Build();
 
