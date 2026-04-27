@@ -8,9 +8,7 @@ public record UpdateTagInput(int Id, string Name, string Color);
 [ExtendObjectType("Mutation")]
 public class TagMutations
 {
-    public async Task<Backend.Entities.Tag> CreateTagAsync(
-        CreateTagInput input, 
-        [Service] ITagService tagService)
+    public async Task<Backend.Entities.Tag> CreateTagAsync(CreateTagInput input, [Service] ITagService tagService)
     {
         var newTag = new Backend.Entities.Tag
         {
@@ -18,12 +16,11 @@ public class TagMutations
             Color = input.Color
         };
 
-        return await tagService.CreateTagAsync(newTag);
+        return await tagService.CreateTagAsync(newTag) 
+               ?? throw new GraphQLException("Помилка при створенні тегу");
     }
 
-    public async Task<Backend.Entities.Tag> UpdateTagAsync(
-        UpdateTagInput input, 
-        [Service] ITagService tagService)
+    public async Task<Backend.Entities.Tag> UpdateTagAsync(UpdateTagInput input, [Service] ITagService tagService)
     {
         var tagUpdates = new Backend.Entities.Tag
         {
@@ -32,13 +29,19 @@ public class TagMutations
             Color = input.Color
         };
 
-        return await tagService.UpdateTagAsync(tagUpdates);
+        return await tagService.UpdateTagAsync(tagUpdates) 
+               ?? throw new GraphQLException("Не вдалося оновити тег");
     }
 
-    public async Task<bool> DeleteTagAsync(
-        int id, 
-        [Service] ITagService tagService)
+    public async Task<bool> DeleteTagAsync(int id, [Service] ITagService tagService)
     {
-        return await tagService.DeleteTagAsync(id);
+        var isDeleted = await tagService.DeleteTagAsync(id);
+        
+        if (!isDeleted)
+        {
+            throw new GraphQLException("Не вдалося видалити тег або його не знайдено");
+        }
+
+        return true;
     }
 }
