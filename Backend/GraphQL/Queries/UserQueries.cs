@@ -1,6 +1,7 @@
 using Backend.Entities;
 using Backend.Services;
 using HotChocolate.Types;
+using HotChocolate.Authorization;
 
 namespace Backend.GraphQL.Queries;
 
@@ -11,7 +12,6 @@ public class UserQueries
     {
         return await userService.GetAllUsersAsync();
     }
-
     public async Task<User?> GetUserByIdAsync(int id, [Service] IUserService userService)
     {
         return await userService.GetUserByIdAsync(id);

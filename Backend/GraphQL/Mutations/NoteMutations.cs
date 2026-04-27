@@ -1,23 +1,27 @@
-﻿using Backend.Entities;
+using Backend.Entities;
 using Backend.Services;
 using HotChocolate;
 using HotChocolate.Types;
+using HotChocolate.Authorization;
 using System;
 using System.Threading.Tasks;
 
 namespace Backend.GraphQL.Mutations;
 
-public record CreateNoteInput(int AuthorId, string Title, string Content);
-public record UpdateNoteInput(int Id, int AuthorId, string Title, string Content);
+public record CreateNoteInput(string Title, string Content);
+public record UpdateNoteInput(int Id, string Title, string Content);
 
 [ExtendObjectType("Mutation")]
 public class NoteMutations
 {
-    public async Task<Note> CreateNoteAsync(CreateNoteInput input, [Service] INoteService noteService)
+    [Authorize]
+    public async Task<Note> CreateNoteAsync(CreateNoteInput input, [Service] INoteService noteService, [Service] ICurrentUserService currentUserService)
     {
+        var userId = currentUserService.UserId
+                     ?? throw new GraphQLException("Користувача не ідентифіковано");
         var newNote = new Note
         {
-            AuthorId = input.AuthorId,
+            AuthorId = userId,
             Title = input.Title,
             Content = input.Content
         };
@@ -26,12 +30,16 @@ public class NoteMutations
                ?? throw new GraphQLException("Помилка при створенні нотатки");
     }
 
-    public async Task<Note> UpdateNoteAsync(UpdateNoteInput input, [Service] INoteService noteService)
+    [Authorize]
+    public async Task<Note> UpdateNoteAsync(UpdateNoteInput input, [Service] INoteService noteService, [Service] ICurrentUserService currentUserService)
     {
+        var userId = currentUserService.UserId
+                     ?? throw new GraphQLException("Користувача не ідентифіковано");
+
         var noteUpdates = new Note
         {
             Id = input.Id,
-            AuthorId = input.AuthorId,
+            AuthorId = userId,
             Title = input.Title ?? string.Empty,
             Content = input.Content ?? string.Empty
         };
@@ -40,6 +48,7 @@ public class NoteMutations
                ?? throw new GraphQLException("Не вдалося оновити нотатку");
     }
 
+    [Authorize]
     public async Task<bool> DeleteNoteAsync(int id, [Service] INoteService noteService)
     {
         var isDeleted = await noteService.DeleteNoteAsync(id);
