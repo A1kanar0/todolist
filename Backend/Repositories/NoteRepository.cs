@@ -39,7 +39,7 @@ public class NoteRepository : INoteRepository
         using var connection = _context.CreateConnection();
         var sql = """
                   UPDATE notes 
-                  SET title = @Title, content = @Content
+                  SET title = @Title, content = @Content, author_id = @AuthorId
                   WHERE id = @Id;
                   """;
 
