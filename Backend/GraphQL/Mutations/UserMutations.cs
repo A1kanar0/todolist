@@ -24,7 +24,7 @@ public class UserMutations
 		var id = await userService.CreateUserAsync(newUser);
 
 		return await userService.GetUserByIdAsync(id)
-			   ?? throw new Exception("Помилка при отриманні створеного користувача");
+			   ?? throw new GraphQLException("Помилка при отриманні створеного користувача");
 	}
 
 	public async Task<User> UpdateUserAsync(UpdateUserInput input, [Service] IUserService userService)
@@ -40,11 +40,11 @@ public class UserMutations
 		var isUpdated = await userService.UpdateUserAsync(userUpdates);
 		if (!isUpdated)
 		{
-			throw new Exception("Не вдалося оновити дані користувача");
+			throw new GraphQLException("Не вдалося оновити дані користувача");
 		}
 
 		return await userService.GetUserByIdAsync(input.Id)
-			   ?? throw new Exception("Користувача не знайдено після оновлення");
+			   ?? throw new GraphQLException("Користувача не знайдено після оновлення");
 	}
 
 	public async Task<User> LoginAsync(LoginInput input, [Service] IUserService userService)
