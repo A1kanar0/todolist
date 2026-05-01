@@ -6,7 +6,7 @@ namespace Backend.GraphQL.Mutations;
 public record CreateTaskInput(
     string Title, 
     string? Content, 
-    DateTime? Deadline,
+    DateTime? Deadline = null,
     int? CategoryId = null, 
     int? ParentId = null
 );
