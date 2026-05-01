@@ -14,4 +14,9 @@ public class NoteQueries
     {
         return await noteService.GetAllNotesAsync();
     }
+    
+    public async Task<Note?> GetNoteByIdAsync(int id, [Service] INoteService noteService)
+    {
+        return await noteService.GetNoteByIdAsync(id);
+    }
 }

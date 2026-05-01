@@ -18,6 +18,9 @@ public class NoteType : ObjectType<Note>
             .Type<UserType>()
             .ResolveWith<NoteResolvers>(r => r.GetAuthorAsync(default!, default!))
             .Description("Користувач, який є автором цієї нотатки");
+        descriptor.Field("images")
+            .ResolveWith<NoteResolvers>(r => r.GetImagesAsync(default!, default!));
+        
     }
 
     private class NoteResolvers
@@ -27,6 +30,11 @@ public class NoteType : ObjectType<Note>
             [Service] IUserService userService)
         {
             return await userService.GetUserByIdAsync(note.AuthorId);
+        }
+        
+        public async Task<IEnumerable<NoteImage>> GetImagesAsync([Parent] Note note, [Service] INoteImageService service)
+        {
+            return await service.GetImagesByNoteIdAsync(note.Id);
         }
     }
 }

@@ -20,6 +20,14 @@ public class NoteRepository : INoteRepository
         
         return await connection.QueryAsync<Note>(sql);
     }
+    
+    public async Task<Note?> GetByIdAsync(int id)
+    {
+        using var connection = _context.CreateConnection();
+        var sql = "SELECT * FROM notes WHERE id = @Id";
+    
+        return await connection.QueryFirstOrDefaultAsync<Note>(sql, new { Id = id });
+    }
 
     public async Task<Note> CreateAsync(Note note)
     {
