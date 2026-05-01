@@ -35,6 +35,9 @@ public class TaskItemService : ITaskItemService
 
         if (task.CategoryId <= 0)
             throw new ArgumentException("Invalid Category ID");
+        
+        if (task.Deadline == null)
+            throw new ArgumentException("Deadline is required");
 
         if (task.ParentId.HasValue && task.ParentId.Value <= 0)
             throw new ArgumentException("Invalid Parent ID");
