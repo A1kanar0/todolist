@@ -61,17 +61,20 @@ builder.Services
     .AddTypeExtension<NoteQueries>()
     .AddTypeExtension<CategoryQueries>()
     .AddTypeExtension<TagQueries>()
+    .AddTypeExtension<TaskItemQueries>()
     
     .AddTypeExtension<UserMutations>()
     .AddTypeExtension<NoteMutations>()
     .AddTypeExtension<CategoryMutations>()
     .AddTypeExtension<TagMutations>()
+    .AddTypeExtension<TaskItemMutations>()
     .AddTypeExtension<NoteImageMutations>()
 
     .AddType<UserType>()
     .AddType<NoteType>()
     .AddType<CategoryType>()
     .AddType<TagType>()
+    .AddType<TaskItemType>()
 
     .AddAuthorization();
 
@@ -127,6 +130,8 @@ builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ITagRepository, TagRepository>();
 builder.Services.AddScoped<ITagService, TagService>();
+builder.Services.AddScoped<ITaskItemRepository, TaskItemRepository>();
+builder.Services.AddScoped<ITaskItemService, TaskItemService>();
 builder.Services.AddScoped<INoteImageRepository, NoteImageRepository>();
 builder.Services.AddScoped<INoteImageService, NoteImageService>();
 builder.Services.AddScoped<IFileService, FileService>();
