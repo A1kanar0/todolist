@@ -15,5 +15,12 @@ public class NoteType : ObjectType<Note>
         descriptor.Field(x => x.Content).Type<NonNullType<StringType>>();
         descriptor.Field(x => x.CreatedAt).Type<NonNullType<DateTimeType>>();
         descriptor.Field("tags").ResolveWith<NoteResolvers>(r => r.GetTagsForNoteAsync(default!, default!));
+        descriptor.Field("author")
+            .Type<UserType>()
+            .ResolveWith<NoteResolvers>(r => r.GetAuthorAsync(default!, default!))
+            .Description("Користувач, який є автором цієї нотатки");
+        descriptor.Field("images")
+            .ResolveWith<NoteResolvers>(r => r.GetImagesAsync(default!, default!));
+        
     }
 }

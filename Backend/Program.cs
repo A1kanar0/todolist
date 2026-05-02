@@ -53,6 +53,7 @@ builder.Services.AddHttpContextAccessor();
 // GraphQL
 builder.Services
     .AddGraphQLServer()
+    .AddType<UploadType>()
     .AddQueryType(q => q.Name("Query"))
     .AddMutationType(m => m.Name("Mutation"))
 
@@ -67,6 +68,7 @@ builder.Services
     .AddTypeExtension<CategoryMutations>()
     .AddTypeExtension<TagMutations>()
     .AddTypeExtension<TaskItemMutations>()
+    .AddTypeExtension<NoteImageMutations>()
 
     .AddType<UserType>()
     .AddType<NoteType>()
@@ -130,10 +132,14 @@ builder.Services.AddScoped<ITagRepository, TagRepository>();
 builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<ITaskItemRepository, TaskItemRepository>();
 builder.Services.AddScoped<ITaskItemService, TaskItemService>();
+builder.Services.AddScoped<INoteImageRepository, NoteImageRepository>();
+builder.Services.AddScoped<INoteImageService, NoteImageService>();
+builder.Services.AddScoped<IFileService, FileService>();
 
 var app = builder.Build();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseStaticFiles();
 
 app.MapGraphQL();
 
