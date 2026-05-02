@@ -23,19 +23,4 @@ public class NoteType : ObjectType<Note>
             .ResolveWith<NoteResolvers>(r => r.GetImagesAsync(default!, default!));
         
     }
-
-    private class NoteResolvers
-    {
-        public async Task<User?> GetAuthorAsync(
-            [Parent] Note note,
-            [Service] IUserService userService)
-        {
-            return await userService.GetUserByIdAsync(note.AuthorId);
-        }
-        
-        public async Task<IEnumerable<NoteImage>> GetImagesAsync([Parent] Note note, [Service] INoteImageService service)
-        {
-            return await service.GetImagesByNoteIdAsync(note.Id);
-        }
-    }
 }
