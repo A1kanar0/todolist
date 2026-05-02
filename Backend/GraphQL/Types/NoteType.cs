@@ -1,5 +1,6 @@
 using HotChocolate.Types;
 using Backend.Entities;
+using Backend.GraphQL.Resolvers;
 using Backend.Services;
 
 namespace Backend.GraphQL.Types;
@@ -13,7 +14,7 @@ public class NoteType : ObjectType<Note>
         descriptor.Field(x => x.Title).Type<NonNullType<StringType>>();
         descriptor.Field(x => x.Content).Type<NonNullType<StringType>>();
         descriptor.Field(x => x.CreatedAt).Type<NonNullType<DateTimeType>>();
-
+        descriptor.Field("tags").ResolveWith<NoteResolvers>(r => r.GetTagsForNoteAsync(default!, default!));
         descriptor.Field("author")
             .Type<UserType>()
             .ResolveWith<NoteResolvers>(r => r.GetAuthorAsync(default!, default!))

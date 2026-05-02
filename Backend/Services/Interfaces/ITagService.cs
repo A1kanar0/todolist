@@ -10,4 +10,5 @@ public interface ITagService
     Task<Backend.Entities.Tag> UpdateTagAsync(Backend.Entities.Tag tag);
     
     Task<bool> DeleteTagAsync(int id);
+    Task<IEnumerable<Backend.Entities.Tag>> GetTagsByNoteIdAsync(int noteId);
 }
