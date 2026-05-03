@@ -69,6 +69,7 @@ builder.Services
     .AddTypeExtension<TagMutations>()
     .AddTypeExtension<TaskItemMutations>()
     .AddTypeExtension<NoteImageMutations>()
+    .AddTypeExtension<TaskImageMutations>()
 
     .AddType<UserType>()
     .AddType<NoteType>()
@@ -134,6 +135,8 @@ builder.Services.AddScoped<ITaskItemRepository, TaskItemRepository>();
 builder.Services.AddScoped<ITaskItemService, TaskItemService>();
 builder.Services.AddScoped<INoteImageRepository, NoteImageRepository>();
 builder.Services.AddScoped<INoteImageService, NoteImageService>();
+builder.Services.AddScoped<ITaskImageRepository, TaskImageRepository>();
+builder.Services.AddScoped<ITaskImageService, TaskImageService>();
 builder.Services.AddScoped<IFileService, FileService>();
 
 var app = builder.Build();

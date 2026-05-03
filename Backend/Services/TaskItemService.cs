@@ -1,4 +1,4 @@
-﻿using Backend.Entities;
+using Backend.Entities;
 using Backend.Repositories;
 
 namespace Backend.Services;
@@ -6,10 +6,12 @@ namespace Backend.Services;
 public class TaskItemService : ITaskItemService
 {
     private readonly ITaskItemRepository _taskRepository;
+    private readonly ITaskImageService _taskImageService;
 
-    public TaskItemService(ITaskItemRepository taskRepository)
+    public TaskItemService(ITaskItemRepository taskRepository, ITaskImageService taskImageService)
     {
         _taskRepository = taskRepository;
+        _taskImageService = taskImageService;
     }
 
     public async Task<TaskItem?> GetTaskByIdAsync(int id)
@@ -36,9 +38,6 @@ public class TaskItemService : ITaskItemService
         if (task.CategoryId <= 0)
             throw new ArgumentException("Invalid Category ID");
         
-        if (task.Deadline == null)
-            throw new ArgumentException("Deadline is required");
-
         if (task.ParentId.HasValue && task.ParentId.Value <= 0)
             throw new ArgumentException("Invalid Parent ID");
 
@@ -70,7 +69,16 @@ public class TaskItemService : ITaskItemService
         if (id <= 0)
             throw new ArgumentException("Invalid Task ID");
 
-        return await _taskRepository.DeleteAsync(id);
+        var images = await _taskImageService.GetImagesByTaskIdAsync(id);
+
+        var isDeleted = await _taskRepository.DeleteAsync(id);
+
+        if (isDeleted)
+        {
+            _taskImageService.DeleteFiles(images);
+        }
+
+        return isDeleted;
     }
 
     public async Task<bool> CompleteTaskAsync(int id)

@@ -1,4 +1,5 @@
-﻿
+using Backend.Entities;
+
 namespace Backend.Repositories;
 
 public interface ITagRepository

@@ -1,4 +1,4 @@
-﻿namespace Backend.Entities;
+namespace Backend.Entities;
 
 public class Note
 {
@@ -7,6 +7,6 @@ public class Note
     public string Title { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
-    
-    public IEnumerable<NoteImage> Images { get; set; } = new List<NoteImage>();
+
+    public ICollection<NoteImage> Images { get; set; } = new List<NoteImage>();
 }

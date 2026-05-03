@@ -1,4 +1,4 @@
-﻿namespace Backend.Entities;
+namespace Backend.Entities;
 
 public class TaskItem
 {
@@ -10,4 +10,6 @@ public class TaskItem
     public bool IsCompleted { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? Deadline { get; set; }
+
+    public ICollection<TaskImage> Images { get; set; } = new List<TaskImage>();
 }
