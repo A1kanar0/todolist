@@ -1,4 +1,3 @@
-using System.Data;
 using Dapper;
 using Backend.Entities;
 using Backend.Data;
@@ -67,5 +66,18 @@ public class UserRepository : IUserRepository
 
         var affectedRows = await connection.ExecuteAsync(sql, new { Id = id });
         return affectedRows > 0;
+    }
+
+    public async Task<IEnumerable<User>> GetUsersByTaskIdAsync(int taskId)
+    {
+        using var connection = _context.CreateConnection();
+        var sql = """
+            SELECT u.* 
+            FROM users u
+            INNER JOIN task_executors te ON u.id = te.user_id
+            WHERE te.task_id = @TaskId AND u.is_deleted = false;
+            """;
+        
+        return await connection.QueryAsync<User>(sql, new { TaskId = taskId });
     }
 }

@@ -10,4 +10,5 @@ public interface IUserRepository
     Task<int> CreateAsync(User user);
     Task<bool> UpdateAsync(User user);
     Task<bool> SoftDeleteAsync(int id);
+    Task<IEnumerable<User>> GetUsersByTaskIdAsync(int taskId);
 }

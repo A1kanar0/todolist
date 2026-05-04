@@ -1,5 +1,6 @@
 using Backend.Entities;
 using Backend.Services;
+
 namespace Backend.GraphQL.Types;
 
 public class TaskItemType : ObjectType<TaskItem>
@@ -14,6 +15,7 @@ public class TaskItemType : ObjectType<TaskItem>
         descriptor.Field(t => t.IsCompleted).Type<NonNullType<BooleanType>>();
         descriptor.Field(t => t.CreatedAt).Type<NonNullType<DateTimeType>>();
         descriptor.Field(t => t.Deadline).Type<DateTimeType>();
+        
         descriptor.Field(t => t.Images)
             .Type<ListType<ObjectType<TaskImage>>>()
             .Resolve(async ctx =>
@@ -21,6 +23,15 @@ public class TaskItemType : ObjectType<TaskItem>
                 var task = ctx.Parent<TaskItem>();
                 var service = ctx.Service<ITaskImageService>();
                 return await service.GetImagesByTaskIdAsync(task.Id);
+            });
+
+        descriptor.Field("executors")
+            .Type<ListType<UserType>>() 
+            .Resolve(async ctx =>
+            {
+                var task = ctx.Parent<TaskItem>();
+                var userService = ctx.Service<IUserService>(); 
+                return await userService.GetUsersByTaskIdAsync(task.Id);
             });
     }
 }

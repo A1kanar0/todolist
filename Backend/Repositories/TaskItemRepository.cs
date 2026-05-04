@@ -29,34 +29,94 @@ public class TaskItemRepository : ITaskItemRepository
         return await connection.QueryAsync<TaskItem>(sql);
     }
 
-    public async Task<TaskItem> CreateAsync(TaskItem task)
+    public async Task<TaskItem> CreateAsync(TaskItem task, IEnumerable<int>? executorIds = null)
     {
         using var connection = _context.CreateConnection();
-        var sql = """
-                  INSERT INTO tasks (parent_id, category_id, title, content, is_completed, created_at, deadline) 
-                  VALUES (@ParentId, @CategoryId, @Title, @Content, @IsCompleted, @CreatedAt, @Deadline) 
-                  RETURNING *;
-                  """;
-                  
-        return await connection.QuerySingleAsync<TaskItem>(sql, task);
+        connection.Open();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var sqlTask = """
+                          INSERT INTO tasks (parent_id, category_id, title, content, is_completed, created_at, deadline) 
+                          VALUES (@ParentId, @CategoryId, @Title, @Content, @IsCompleted, @CreatedAt, @Deadline) 
+                          RETURNING *;
+                          """;
+                          
+            var createdTask = await connection.QuerySingleAsync<TaskItem>(sqlTask, task, transaction);
+
+            if (executorIds != null && executorIds.Any())
+            {
+                var sqlExecutors = "INSERT INTO task_executors (task_id, user_id) VALUES (@TaskId, @UserId);";
+                
+                var executorParams = executorIds.Select(userId => new 
+                { 
+                    TaskId = createdTask.Id, 
+                    UserId = userId 
+                });
+                
+                await connection.ExecuteAsync(sqlExecutors, executorParams, transaction);
+            }
+
+            transaction.Commit();
+            return createdTask;
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
     }
 
-    public async Task<TaskItem?> UpdateAsync(TaskItem task)
+    public async Task<TaskItem?> UpdateAsync(TaskItem task, IEnumerable<int>? executorIds = null)
     {
         using var connection = _context.CreateConnection();
-        var sql = """
-                  UPDATE tasks 
-                  SET parent_id = @ParentId,
-                      category_id = @CategoryId,
-                      title = @Title,
-                      content = @Content,
-                      is_completed = @IsCompleted,
-                      deadline = @Deadline
-                  WHERE id = @Id
-                  RETURNING *;
-                  """;
-                  
-        return await connection.QueryFirstOrDefaultAsync<TaskItem>(sql, task);
+        connection.Open();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            var sqlTask = """
+                          UPDATE tasks 
+                          SET parent_id = @ParentId,
+                              category_id = @CategoryId,
+                              title = @Title,
+                              content = @Content,
+                              is_completed = @IsCompleted,
+                              deadline = @Deadline
+                          WHERE id = @Id
+                          RETURNING *;
+                          """;
+                      
+            var updatedTask = await connection.QueryFirstOrDefaultAsync<TaskItem>(sqlTask, task, transaction);
+
+            if (updatedTask != null && executorIds != null)
+            {
+                var sqlDeleteExecutors = "DELETE FROM task_executors WHERE task_id = @Id";
+                await connection.ExecuteAsync(sqlDeleteExecutors, new { Id = task.Id }, transaction);
+
+                if (executorIds.Any())
+                {
+                    var sqlInsertExecutors = "INSERT INTO task_executors (task_id, user_id) VALUES (@TaskId, @UserId)";
+                
+                    var executorParams = executorIds.Select(userId => new 
+                    { 
+                        TaskId = task.Id, 
+                        UserId = userId 
+                    });
+                
+                    await connection.ExecuteAsync(sqlInsertExecutors, executorParams, transaction);
+                }
+            }
+
+            transaction.Commit();
+            return updatedTask;
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
     }
 
     public async Task<bool> DeleteAsync(int id)

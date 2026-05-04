@@ -59,7 +59,6 @@ public class UserService : IUserService
 
         if (!string.IsNullOrWhiteSpace(userUpdates.Email) && existingUser.Email != userUpdates.Email)
         {
-
             var emailCheck = await _userRepository.GetByEmailAsync(userUpdates.Email);
             if (emailCheck != null) throw new Exception("This email is already taken by another user");
 
@@ -88,6 +87,14 @@ public class UserService : IUserService
         }
 
         return null;
+    }
+
+    public async Task<IEnumerable<User>> GetUsersByTaskIdAsync(int taskId)
+    {
+        if (taskId <= 0)
+            throw new ArgumentException("Invalid Task ID");
+
+        return await _userRepository.GetUsersByTaskIdAsync(taskId);
     }
 
     // JWT
