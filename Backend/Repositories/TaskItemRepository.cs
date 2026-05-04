@@ -1,4 +1,4 @@
-﻿using Backend.Entities;
+using Backend.Entities;
 using Backend.Data;
 using Dapper;
 
@@ -136,12 +136,70 @@ public class TaskItemRepository : ITaskItemRepository
         var affectedRows = await connection.ExecuteAsync(sql, new { Id = id });
         return affectedRows > 0;
     }
-    
-    public async Task<IEnumerable<TaskItem>> GetByCategoryIdAsync(int categoryId)
+
+    public async Task<IEnumerable<TaskItem>> GetFilteredTasksAsync(TaskFilter filter)
     {
         using var connection = _context.CreateConnection();
-        var sql = "SELECT * FROM tasks WHERE category_id = @CategoryId";
-    
-        return await connection.QueryAsync<TaskItem>(sql, new { CategoryId = categoryId });
+
+        var sqlBuilder = new System.Text.StringBuilder("""
+          SELECT t.*, 
+                 EXISTS(
+                     SELECT 1 FROM tasks child 
+                     WHERE child.parent_id = t.id AND child.is_completed = false
+                 ) AS HasUncompletedChildren
+          FROM tasks t
+          WHERE 1=1
+          """);
+
+        var parameters = new DynamicParameters();
+
+        if (filter.CategoryId.HasValue)
+        {
+            sqlBuilder.Append(" AND t.category_id = @CategoryId");
+            parameters.Add("CategoryId", filter.CategoryId.Value);
+        }
+
+        if (filter.IsCompleted.HasValue)
+        {
+            sqlBuilder.Append(" AND t.is_completed = @IsCompleted");
+            parameters.Add("IsCompleted", filter.IsCompleted.Value);
+        }
+
+        if (filter.DeadlineFrom.HasValue)
+        {
+            sqlBuilder.Append(" AND t.deadline >= @DeadlineFrom");
+            parameters.Add("DeadlineFrom", filter.DeadlineFrom.Value);
+        }
+
+        if (filter.DeadlineTo.HasValue)
+        {
+            sqlBuilder.Append(" AND t.deadline <= @DeadlineTo");
+            parameters.Add("DeadlineTo", filter.DeadlineTo.Value);
+        }
+
+        if (filter.ExecutorIds != null && filter.ExecutorIds.Any())
+        {
+            sqlBuilder.Append(" AND EXISTS (SELECT 1 FROM task_executors te WHERE te.task_id = t.id AND te.user_id = ANY(@ExecutorIds))");
+            parameters.Add("ExecutorIds", filter.ExecutorIds);
+        }
+
+        if (filter.SortByDeadlineAscending.HasValue)
+        {
+            sqlBuilder.Append(filter.SortByDeadlineAscending.Value
+                ? " ORDER BY t.deadline ASC NULLS LAST"
+                : " ORDER BY t.deadline DESC NULLS LAST");
+        }
+        else if (filter.SortByCreatedAtAscending.HasValue)
+        {
+            sqlBuilder.Append(filter.SortByCreatedAtAscending.Value
+                ? " ORDER BY t.created_at ASC"
+                : " ORDER BY t.created_at DESC");
+        }
+        else
+        {
+            sqlBuilder.Append(" ORDER BY t.created_at DESC");
+        }
+
+        return await connection.QueryAsync<TaskItem>(sqlBuilder.ToString(), parameters);
     }
 }

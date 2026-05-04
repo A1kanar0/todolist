@@ -1,4 +1,4 @@
-﻿using Backend.Entities;
+using Backend.Entities;
 
 namespace Backend.Repositories;
 
@@ -10,5 +10,5 @@ public interface ITaskItemRepository
     Task<TaskItem?> UpdateAsync(TaskItem task, IEnumerable<int>? executorIds = null);
     Task<bool> DeleteAsync(int id);
     Task<bool> CompleteTaskAsync(int id);
-    Task<IEnumerable<TaskItem>> GetByCategoryIdAsync(int categoryId);
+    Task<IEnumerable<TaskItem>> GetFilteredTasksAsync(TaskFilter filter);
 }

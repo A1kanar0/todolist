@@ -10,6 +10,7 @@ public class TaskItem
     public bool IsCompleted { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? Deadline { get; set; }
+    public bool HasUncompletedChildren { get; set; }
 
     public ICollection<TaskImage> Images { get; set; } = new List<TaskImage>();
 }
