@@ -62,7 +62,7 @@ builder.Services
     .AddTypeExtension<CategoryQueries>()
     .AddTypeExtension<TagQueries>()
     .AddTypeExtension<TaskItemQueries>()
-    
+
     .AddTypeExtension<UserMutations>()
     .AddTypeExtension<NoteMutations>()
     .AddTypeExtension<CategoryMutations>()
@@ -76,8 +76,9 @@ builder.Services
     .AddType<CategoryType>()
     .AddType<TagType>()
     .AddType<TaskItemType>()
-
+    .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = builder.Environment.IsDevelopment()) // УБРАТЬ НАХУЙ З ПРОДА
     .AddAuthorization();
+    
 
 // JWT
 var jwtSettings = builder.Configuration.GetSection("Jwt");

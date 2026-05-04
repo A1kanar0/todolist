@@ -88,11 +88,10 @@ public class TaskItemService : ITaskItemService
 
         return await _taskRepository.CompleteTaskAsync(id);
     }
-    public async Task<IEnumerable<TaskItem>> GetTasksByCategoryIdAsync(int categoryId)
-    {
-        if (categoryId <= 0)
-            throw new ArgumentException("Invalid Category ID");
 
-        return await _taskRepository.GetByCategoryIdAsync(categoryId);
+    public async Task<IEnumerable<TaskItem>> GetFilteredTasksAsync(TaskFilter filter)
+    {
+        filter ??= new TaskFilter();
+        return await _taskRepository.GetFilteredTasksAsync(filter);
     }
 }

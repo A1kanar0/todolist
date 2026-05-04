@@ -1,11 +1,11 @@
-﻿using Backend.Entities;
+using Backend.Entities;
 using Backend.Services;
 
 namespace Backend.GraphQL.Mutations;
 
 public record CreateTaskInput(
     string Title, 
-    string? Content, 
+    string Content, 
     DateTime? Deadline = null,
     int? CategoryId = null, 
     int? ParentId = null,
