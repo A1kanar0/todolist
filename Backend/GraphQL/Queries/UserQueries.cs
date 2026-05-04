@@ -20,4 +20,9 @@ public class UserQueries
     {
         return await userService.GetUserByEmailAsync(email);
     }
+
+    public async Task<IEnumerable<User>> GetUsersByTaskIdAsync(int taskId, [Service] IUserService userService)
+    {
+        return await userService.GetUsersByTaskIdAsync(taskId);
+    }
 }

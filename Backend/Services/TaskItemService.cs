@@ -27,7 +27,7 @@ public class TaskItemService : ITaskItemService
         return await _taskRepository.GetAllAsync();
     }
 
-    public async Task<TaskItem?> CreateTaskAsync(TaskItem task)
+    public async Task<TaskItem?> CreateTaskAsync(TaskItem task, IEnumerable<int>? executorIds = null)
     {
         if (task == null)
             throw new ArgumentNullException(nameof(task));
@@ -35,16 +35,16 @@ public class TaskItemService : ITaskItemService
         if (string.IsNullOrWhiteSpace(task.Title))
             throw new ArgumentException("Title is required");
 
-        if (task.CategoryId <= 0)
+        if (task.CategoryId.HasValue && task.CategoryId.Value <= 0)
             throw new ArgumentException("Invalid Category ID");
         
         if (task.ParentId.HasValue && task.ParentId.Value <= 0)
             throw new ArgumentException("Invalid Parent ID");
 
-        return await _taskRepository.CreateAsync(task);
+        return await _taskRepository.CreateAsync(task, executorIds);
     }
 
-    public async Task<TaskItem?> UpdateTaskAsync(TaskItem task)
+    public async Task<TaskItem?> UpdateTaskAsync(TaskItem task, IEnumerable<int>? executorIds = null)
     {
         if (task == null)
             throw new ArgumentNullException(nameof(task));
@@ -55,13 +55,13 @@ public class TaskItemService : ITaskItemService
         if (string.IsNullOrWhiteSpace(task.Title))
             throw new ArgumentException("Title is required");
 
-        if (task.CategoryId <= 0)
+        if (task.CategoryId.HasValue && task.CategoryId.Value <= 0)
             throw new ArgumentException("Invalid Category ID");
 
         if (task.ParentId.HasValue && task.ParentId.Value <= 0)
             throw new ArgumentException("Invalid Parent ID");
 
-        return await _taskRepository.UpdateAsync(task);
+        return await _taskRepository.UpdateAsync(task, executorIds);
     }
 
     public async Task<bool> DeleteTaskAsync(int id)
@@ -87,5 +87,12 @@ public class TaskItemService : ITaskItemService
             throw new ArgumentException("Invalid Task ID");
 
         return await _taskRepository.CompleteTaskAsync(id);
+    }
+    public async Task<IEnumerable<TaskItem>> GetTasksByCategoryIdAsync(int categoryId)
+    {
+        if (categoryId <= 0)
+            throw new ArgumentException("Invalid Category ID");
+
+        return await _taskRepository.GetByCategoryIdAsync(categoryId);
     }
 }

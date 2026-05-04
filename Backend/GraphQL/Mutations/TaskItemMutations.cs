@@ -8,17 +8,19 @@ public record CreateTaskInput(
     string? Content, 
     DateTime? Deadline = null,
     int? CategoryId = null, 
-    int? ParentId = null
+    int? ParentId = null,
+    List<int>? ExecutorIds = null
 );
 
 public record UpdateTaskInput(
     int Id, 
-    int CategoryId, 
-    int? ParentId, 
     string Title, 
-    string? Content, 
     bool IsCompleted, 
-    DateTime? Deadline
+    int? CategoryId = null, 
+    int? ParentId = null, 
+    string? Content = null, 
+    DateTime? Deadline = null,
+    List<int>? ExecutorIds = null
 );
 
 [ExtendObjectType("Mutation")]
@@ -37,7 +39,7 @@ public class TaskItemMutations
             IsCompleted = false
         };
 
-        return await taskService.CreateTaskAsync(task) 
+        return await taskService.CreateTaskAsync(task, input.ExecutorIds) 
                ?? throw new GraphQLException("Не вдалося створити завдання");
     }
 
@@ -54,7 +56,7 @@ public class TaskItemMutations
             Deadline = input.Deadline
         };
 
-        return await taskService.UpdateTaskAsync(task) 
+        return await taskService.UpdateTaskAsync(task, input.ExecutorIds) 
                ?? throw new GraphQLException("Не вдалося оновити завдання");
     }
 
