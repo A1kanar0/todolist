@@ -10,4 +10,5 @@ public interface ITaskItemService
     Task<TaskItem?> UpdateTaskAsync(TaskItem task, IEnumerable<int>? executorIds = null);
     Task<bool> DeleteTaskAsync(int id);
     Task<bool> CompleteTaskAsync(int id);
+    Task<IEnumerable<TaskItem>> GetTasksByCategoryIdAsync(int categoryId);
 }

@@ -10,4 +10,5 @@ public interface ITaskItemRepository
     Task<TaskItem?> UpdateAsync(TaskItem task, IEnumerable<int>? executorIds = null);
     Task<bool> DeleteAsync(int id);
     Task<bool> CompleteTaskAsync(int id);
+    Task<IEnumerable<TaskItem>> GetByCategoryIdAsync(int categoryId);
 }

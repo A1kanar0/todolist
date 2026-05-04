@@ -15,4 +15,8 @@ public class TaskItemQueries
     {
         return await taskService.GetTaskByIdAsync(id);
     }
+    public async Task<IEnumerable<TaskItem>> GetTasksByCategoryIdAsync(int categoryId, [Service] ITaskItemService taskService)
+    {
+        return await taskService.GetTasksByCategoryIdAsync(categoryId);
+    }
 }

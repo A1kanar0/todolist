@@ -136,4 +136,12 @@ public class TaskItemRepository : ITaskItemRepository
         var affectedRows = await connection.ExecuteAsync(sql, new { Id = id });
         return affectedRows > 0;
     }
+    
+    public async Task<IEnumerable<TaskItem>> GetByCategoryIdAsync(int categoryId)
+    {
+        using var connection = _context.CreateConnection();
+        var sql = "SELECT * FROM tasks WHERE category_id = @CategoryId";
+    
+        return await connection.QueryAsync<TaskItem>(sql, new { CategoryId = categoryId });
+    }
 }
