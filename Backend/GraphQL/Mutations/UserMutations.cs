@@ -14,7 +14,7 @@ public record LoginInput(string Email, string Password);
 [ExtendObjectType("Mutation")]
 public class UserMutations
 {
-	[Authorize]
+	// [Authorize]
 	public async Task<User> CreateUserAsync(CreateUserInput input, [Service] IUserService userService)
 	{
 		var newUser = new User
@@ -71,6 +71,38 @@ public class UserMutations
 	public bool Logout([Service] ICurrentUserService currentUserService)
 	{
 		currentUserService.ClearAuthCookie();
+		return true;
+	}
+	
+	[Authorize]
+	public async Task<bool> DeleteUserAsync(
+		int targetUserId, 
+		[Service] IUserService userService, 
+		[Service] ICurrentUserService currentUserService)
+	{
+		var currentUserId = currentUserService.UserId 
+		                    ?? throw new GraphQLException("Ви не авторизовані");
+
+		// --- SAFETY CAR ---
+		// var allowedAdminIds = new[] { 1, 2 }; // Впиши сюди ID юзерів, яким можна все
+		// if (currentUserId != targetUserId && !allowedAdminIds.Contains(currentUserId)) 
+		// {
+		//     throw new GraphQLException("Доступ заборонено. Ви можете видалити лише себе.");
+		// }
+		// -----------------------------------------
+
+		var isDeleted = await userService.SoftDeleteUserAsync(targetUserId);
+
+		if (!isDeleted)
+		{
+			throw new GraphQLException("Не вдалося видалити користувача (можливо, його не існує)");
+		}
+		
+		if (currentUserId == targetUserId)
+		{
+			currentUserService.ClearAuthCookie();
+		}
+
 		return true;
 	}
 }

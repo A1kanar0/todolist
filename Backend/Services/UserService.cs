@@ -96,6 +96,16 @@ public class UserService : IUserService
 
         return await _userRepository.GetUsersByTaskIdAsync(taskId);
     }
+    
+    public async Task<bool> SoftDeleteUserAsync(int id)
+    {
+        return await _userRepository.SoftDeleteAsync(id);
+    }
+    
+    public async Task<IEnumerable<User>> GetAllUsersIncludingDeletedAsync()
+    {
+        return await _userRepository.GetAllUsersIncludingDeletedAsync();
+    }
 
     // JWT
 

@@ -80,4 +80,15 @@ public class UserRepository : IUserRepository
         
         return await connection.QueryAsync<User>(sql, new { TaskId = taskId });
     }
+    
+    public async Task<IEnumerable<User>> GetAllUsersIncludingDeletedAsync()
+    {
+        using var connection = _context.CreateConnection();
+        
+        await connection.ExecuteAsync("SET LOCAL app.show_deleted = 'true'");
+        
+        var users = await connection.QueryAsync<User>("SELECT * FROM users");
+
+        return users;
+    }
 }
