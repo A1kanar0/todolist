@@ -127,6 +127,14 @@ public class TaskItemRepository : ITaskItemRepository
         var affectedRows = await connection.ExecuteAsync(sql, new { Id = id });
         return affectedRows > 0;
     }
+    
+    public async Task<int> UnlinkChildrenAsync(int parentId)
+    {
+        using var connection = _context.CreateConnection();
+        var sql = "UPDATE tasks SET parent_id = NULL WHERE parent_id = @ParentId";
+    
+        return await connection.ExecuteAsync(sql, new { ParentId = parentId });
+    }
 
     public async Task<bool> CompleteTaskAsync(int id)
     {

@@ -85,6 +85,23 @@ public class TaskItemService : ITaskItemService
 
         return isDeleted;
     }
+    
+    public async Task<bool> DeleteSingleTaskAsync(int id)
+    {
+        if (id <= 0) throw new ArgumentException("Invalid Task ID");
+        
+        var imagesToDelete = await _taskImageService.GetImagesByTaskIdAsync(id);
+        await _taskRepository.UnlinkChildrenAsync(id);
+        
+        var isDeleted = await _taskRepository.DeleteAsync(id);
+
+        if (isDeleted && imagesToDelete.Any())
+        {
+            _taskImageService.DeleteFiles(imagesToDelete);
+        }
+
+        return isDeleted;
+    }
 
     public async Task<bool> CompleteTaskAsync(int id)
     {
