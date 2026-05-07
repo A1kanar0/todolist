@@ -31,6 +31,16 @@ public class TaskImageRepository : ITaskImageRepository
         var sql = "SELECT id, file_path as FilePath, file_name as FileName, task_id as TaskId FROM task_images WHERE task_id = @TaskId";
         return await connection.QueryAsync<TaskImage>(sql, new { TaskId = taskId });
     }
+    
+    public async Task<IEnumerable<TaskImage>> GetImagesByTaskIdArrayAsync(IEnumerable<int> taskIds)
+    {
+        if (taskIds == null || !taskIds.Any()) return Enumerable.Empty<TaskImage>();
+
+        using var connection = _context.CreateConnection();
+        var sql = "SELECT * FROM task_images WHERE task_id = ANY(@TaskIds)";
+    
+        return await connection.QueryAsync<TaskImage>(sql, new { TaskIds = taskIds });
+    }
 
     public async Task<TaskImage?> GetByIdAsync(int id)
     {
