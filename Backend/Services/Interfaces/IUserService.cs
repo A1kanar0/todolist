@@ -12,4 +12,6 @@ public interface IUserService
     Task<User?> AuthenticateAsync(string email, string password);
     string GenerateJwtToken(User user);
     Task<IEnumerable<User>> GetUsersByTaskIdAsync(int taskId);
+    Task<bool> SoftDeleteUserAsync(int id);
+    Task<IEnumerable<User>> GetAllUsersIncludingDeletedAsync();
 }

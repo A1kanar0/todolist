@@ -68,7 +68,7 @@ builder.Services
     .AddTypeExtension<CategoryMutations>()
     .AddTypeExtension<TagMutations>()
     .AddTypeExtension<TaskItemMutations>()
-    .AddTypeExtension<NoteImageMutations>()
+    .AddTypeExtension<ImageMutations>()
 
     .AddType<UserType>()
     .AddType<NoteType>()
