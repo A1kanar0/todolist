@@ -13,7 +13,25 @@ public class ImageMutations
         IFile file,
         [Service] INoteImageService noteImageService)
     {
-        return await noteImageService.UploadImageAsync(noteId, file);
+        if (noteId <= 0)
+        {
+            throw new GraphQLException("Недійсний ID нотатки.");
+        }
+
+        if (file == null)
+        {
+            throw new GraphQLException("Файл є обов'язковим і не може бути порожнім.");
+        }
+
+        try
+        {
+            return await noteImageService.UploadImageAsync(noteId, file)
+                   ?? throw new GraphQLException("Помилка при завантаженні зображення.");
+        }
+        catch (Exception ex)
+        {
+            throw new GraphQLException($"Помилка завантаження зображення: {ex.Message}");
+        }
     }
     
     [Authorize]
@@ -21,14 +39,26 @@ public class ImageMutations
         int id,
         [Service] INoteImageService noteImageService)
     {
-        var isDeleted = await noteImageService.DeleteImageAsync(id);
-
-        if (!isDeleted)
+        if (id <= 0)
         {
-            throw new GraphQLException("Не вдалося видалити зображення завдання або його не знайдено.");
+            throw new GraphQLException("Недійсний ID зображення.");
         }
 
-        return true;
+        try
+        {
+            var isDeleted = await noteImageService.DeleteImageAsync(id);
+
+            if (!isDeleted)
+            {
+                throw new GraphQLException("Не вдалося видалити зображення нотатки або його не знайдено.");
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            throw new GraphQLException($"Помилка видалення: {ex.Message}");
+        }
     }
 
     public async Task<TaskImage> UploadTaskImageAsync(
@@ -36,20 +66,50 @@ public class ImageMutations
         IFile file,
         [Service] ITaskImageService taskImageService)
     {
-        return await taskImageService.UploadImageAsync(taskId, file);
+        if (taskId <= 0)
+        {
+            throw new GraphQLException("Недійсний ID завдання.");
+        }
+
+        if (file == null)
+        {
+            throw new GraphQLException("Файл є обов'язковим і не може бути порожнім.");
+        }
+
+        try
+        {
+            return await taskImageService.UploadImageAsync(taskId, file)
+                   ?? throw new GraphQLException("Помилка при завантаженні зображення.");
+        }
+        catch (Exception ex)
+        {
+            throw new GraphQLException($"Помилка завантаження зображення: {ex.Message}");
+        }
     }
 
     public async Task<bool> DeleteTaskImageAsync(
         int id, 
         [Service] ITaskImageService taskImageService)
     {
-        var isDeleted = await taskImageService.DeleteImageAsync(id);
-
-        if (!isDeleted)
+        if (id <= 0)
         {
-            throw new GraphQLException("Не вдалося видалити зображення завдання або його не знайдено.");
+            throw new GraphQLException("Недійсний ID зображення.");
         }
 
-        return true;
+        try
+        {
+            var isDeleted = await taskImageService.DeleteImageAsync(id);
+
+            if (!isDeleted)
+            {
+                throw new GraphQLException("Не вдалося видалити зображення завдання або його не знайдено.");
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            throw new GraphQLException($"Помилка видалення: {ex.Message}");
+        }
     }
 }
