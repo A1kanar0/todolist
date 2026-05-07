@@ -11,4 +11,5 @@ public interface IUserRepository
     Task<bool> UpdateAsync(User user);
     Task<bool> SoftDeleteAsync(int id);
     Task<IEnumerable<User>> GetUsersByTaskIdAsync(int taskId);
+    Task<IEnumerable<User>> GetAllUsersIncludingDeletedAsync();
 }

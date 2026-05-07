@@ -12,6 +12,10 @@ public class UserQueries
     {
         return await userService.GetAllUsersAsync();
     }
+    public async Task<IEnumerable<User>> GetUsersIncludingDeletedAsync([Service] IUserService userService)
+    {
+        return await userService.GetAllUsersIncludingDeletedAsync();
+    }
     public async Task<User?> GetUserByIdAsync(int id, [Service] IUserService userService)
     {
         return await userService.GetUserByIdAsync(id);

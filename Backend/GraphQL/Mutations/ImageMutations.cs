@@ -5,7 +5,7 @@ using HotChocolate.Authorization;
 namespace Backend.GraphQL.Mutations;
 
 [ExtendObjectType("Mutation")]
-public class NoteImageMutations
+public class ImageMutations
 {
     [Authorize]
     public async Task<NoteImage> UploadNoteImageAsync(
