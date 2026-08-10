@@ -2,6 +2,7 @@ import { useTaskStore } from '../../store/useTaskStore';
 import type { TaskNode } from './TaskItem';
 import Button from '../ui/Button';
 import EditButton from '../ui/EditButton';
+import TextEditor from '../ui/TextEditor'; // <--- Імпортуємо наш новий редактор
 
 interface TaskDetailsProps {
     task: TaskNode | null;
@@ -33,26 +34,8 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
                     />
                 </div>
 
-                {/* Заглушка під майбутній Rich Text Editor (який буде повертати JSON) */}
-                <div className="flex-1 flex flex-col mb-4 border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#A890F0] transition-all">
-
-                    {/* Панель інструментів (заглушка) */}
-                    <div className="flex gap-3 p-3 bg-gray-100 border-b border-gray-200 text-gray-600">
-                        <button className="font-bold hover:text-[#A890F0]">B</button>
-                        <button className="italic hover:text-[#A890F0]">I</button>
-                        <button className="underline hover:text-[#A890F0]">U</button>
-                        <div className="w-px bg-gray-300 mx-1"></div>
-                        <button className="hover:text-[#A890F0]">🔗</button>
-                        <button className="hover:text-[#A890F0]">📷</button>
-                        <span className="ml-auto text-xs text-gray-400 font-medium self-center">JSON Editor Placeholder</span>
-                    </div>
-
-                    <textarea
-                        defaultValue={task.text}
-                        className="flex-1 w-full p-4 bg-gray-50 outline-none resize-none custom-scrollbar"
-                        placeholder="Введіть детальний опис..."
-                    ></textarea>
-                </div>
+                {/* Використовуємо наш новий ізольований компонент редактора */}
+                <TextEditor defaultValue={task.text} />
 
                 {/* Кнопки збереження */}
                 <div className="mt-auto pt-4 border-t border-gray-100 flex justify-end gap-3">
@@ -95,7 +78,6 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
             </div>
 
             <div className="mt-auto pt-6 border-t border-gray-100 flex gap-3">
-                {/* Використовуємо універсальну кнопку і передаємо їй потрібну дію */}
                 <EditButton
                     className="flex-1"
                     onClick={() => setIsEditingTask(true)}
