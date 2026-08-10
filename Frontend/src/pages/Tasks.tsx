@@ -1,12 +1,14 @@
 import { useTaskStore } from '../store/useTaskStore';
-import TaskItem, { type TaskNode } from '../components/tasks/TaskItem.tsx';
+import TaskItem, { type TaskNode } from '../components/tasks/TaskItem';
 import TaskDetails from '../components/tasks/TaskDetails';
 
 export default function Tasks() {
     const selectedTask = useTaskStore((state) => state.selectedTask);
     const openCreateModal = useTaskStore((state) => state.openCreateModal);
+    const isEditingTask = useTaskStore((state) => state.isEditingTask); // <--- Дістаємо стан редагування
 
     const mockTasksTree: TaskNode[] = [
+        // ... твої мокові дані залишаються без змін ...
         {
             id: '1',
             title: 'Розробити фронтенд',
@@ -73,9 +75,12 @@ export default function Tasks() {
                 </div>
             </div>
 
-            <div className="w-96 bg-[#F3F4F6] rounded-2xl p-6 flex flex-col">
+            {/* Анімована зміна ширини панелі: w-96 (звичайний) або w-[800px] (редактор) */}
+            <div className={`bg-[#F3F4F6] rounded-2xl p-6 flex flex-col transition-all duration-300 ease-in-out ${isEditingTask ? 'w-[800px]' : 'w-96'}`}>
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-800">Task Details</h2>
+                    <h2 className="text-2xl font-bold text-gray-800">
+                        {isEditingTask ? 'Edit Task' : 'Task Details'}
+                    </h2>
                 </div>
 
                 <TaskDetails task={selectedTask} />

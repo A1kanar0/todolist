@@ -1,10 +1,14 @@
-import type { TaskNode } from './TaskItem.tsx';
+import { useTaskStore } from '../../store/useTaskStore';
+import type { TaskNode } from './TaskItem';
 
 interface TaskDetailsProps {
     task: TaskNode | null;
 }
 
 export default function TaskDetails({ task }: TaskDetailsProps) {
+    const isEditingTask = useTaskStore((state) => state.isEditingTask);
+    const setIsEditingTask = useTaskStore((state) => state.setIsEditingTask);
+
     if (!task) {
         return (
             <div className="flex-1 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center text-gray-400">
@@ -13,6 +17,64 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
         );
     }
 
+    // РЕЖИМ РЕДАГУВАННЯ
+    if (isEditingTask) {
+        return (
+            <div className="flex-1 flex flex-col bg-white rounded-xl p-5 border border-gray-200 shadow-sm overflow-hidden">
+                {/* Заголовок */}
+                <div className="mb-4">
+                    <input
+                        type="text"
+                        defaultValue={task.title}
+                        className="w-full text-2xl font-bold text-gray-900 bg-gray-50 p-3 rounded-lg outline-none focus:ring-2 focus:ring-[#A890F0] transition-all"
+                        placeholder="Назва завдання..."
+                    />
+                </div>
+
+                {/* Заглушка під майбутній Rich Text Editor (який буде повертати JSON) */}
+                <div className="flex-1 flex flex-col mb-4 border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#A890F0] transition-all">
+
+                    {/* Панель інструментів (заглушка) */}
+                    <div className="flex gap-3 p-3 bg-gray-100 border-b border-gray-200 text-gray-600">
+                        <button className="font-bold hover:text-[#A890F0]">B</button>
+                        <button className="italic hover:text-[#A890F0]">I</button>
+                        <button className="underline hover:text-[#A890F0]">U</button>
+                        <div className="w-px bg-gray-300 mx-1"></div>
+                        <button className="hover:text-[#A890F0]">🔗</button>
+                        <button className="hover:text-[#A890F0]">📷</button>
+                        <span className="ml-auto text-xs text-gray-400 font-medium self-center">JSON Editor Placeholder</span>
+                    </div>
+
+                    <textarea
+                        defaultValue={task.text}
+                        className="flex-1 w-full p-4 bg-gray-50 outline-none resize-none custom-scrollbar"
+                        placeholder="Введіть детальний опис..."
+                    ></textarea>
+                </div>
+
+                {/* Кнопки збереження */}
+                <div className="mt-auto pt-4 border-t border-gray-100 flex justify-end gap-3">
+                    <button
+                        onClick={() => setIsEditingTask(false)}
+                        className="px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-xl transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={() => {
+                            alert('Тут ми будемо збирати JSON з редактора та зберігати його на бекенді!');
+                            setIsEditingTask(false);
+                        }}
+                        className="px-6 py-2.5 bg-[#A890F0] hover:bg-[#967deb] text-white font-bold rounded-xl transition-colors shadow-sm"
+                    >
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // ЗВИЧАЙНИЙ РЕЖИМ ПЕРЕГЛЯДУ
     return (
         <div className="flex-1 flex flex-col bg-white rounded-xl p-5 border border-gray-200 shadow-sm overflow-y-auto custom-scrollbar">
             <div className="mb-4">
@@ -30,7 +92,10 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
             </div>
 
             <div className="mt-auto pt-6 border-t border-gray-100 flex gap-3">
-                <button className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg transition-colors">
+                <button
+                    onClick={() => setIsEditingTask(true)}
+                    className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg transition-colors"
+                >
                     Edit
                 </button>
                 <button className="flex-1 py-2 bg-[#A890F0] hover:bg-[#967deb] text-white font-semibold rounded-lg transition-colors">
