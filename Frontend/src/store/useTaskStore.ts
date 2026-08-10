@@ -12,12 +12,10 @@ interface TaskStore {
     isEditingTask: boolean;
     setIsEditingTask: (isEditing: boolean) => void;
 
-    // ДОДАЄМО СТАН ДЛЯ НАЛАШТУВАНЬ
     isSettingsModalOpen: boolean;
     openSettingsModal: () => void;
     closeSettingsModal: () => void;
 
-    // Додаємо тип та стан для теми
     theme: 'light' | 'dark' | 'system';
     setTheme: (theme: 'light' | 'dark' | 'system') => void;
 }
@@ -33,11 +31,10 @@ export const useTaskStore = create<TaskStore>((set) => ({
     isEditingTask: false,
     setIsEditingTask: (isEditing) => set({ isEditingTask: isEditing }),
 
-    // ДОДАЄМО ЕКШЕНИ ДЛЯ НАЛАШТУВАНЬ
     isSettingsModalOpen: false,
     openSettingsModal: () => set({ isSettingsModalOpen: true }),
     closeSettingsModal: () => set({ isSettingsModalOpen: false }),
 
-    theme: 'light', // за замовчуванням світла
+    theme: 'light',
     setTheme: (theme) => set({ theme }),
 }));
