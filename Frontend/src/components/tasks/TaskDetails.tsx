@@ -1,6 +1,7 @@
 import { useTaskStore } from '../../store/useTaskStore';
 import type { TaskNode } from './TaskItem';
 import Button from '../ui/Button';
+import EditButton from '../ui/EditButton';
 
 interface TaskDetailsProps {
     task: TaskNode | null;
@@ -82,8 +83,8 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
             <div className="mb-4">
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">{task.title}</h3>
                 <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-bold inline-block">
-          {task.status}
-        </span>
+                    {task.status}
+                </span>
             </div>
 
             <div className="mb-6">
@@ -94,13 +95,11 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
             </div>
 
             <div className="mt-auto pt-6 border-t border-gray-100 flex gap-3">
-                <Button
-                    variant="secondary"
+                {/* Використовуємо універсальну кнопку і передаємо їй потрібну дію */}
+                <EditButton
                     className="flex-1"
                     onClick={() => setIsEditingTask(true)}
-                >
-                    Edit
-                </Button>
+                />
 
                 <Button
                     variant="primary"

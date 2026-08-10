@@ -77,6 +77,8 @@ export default function Home() {
                             { label: '#tag2', color: 'bg-purple-200 text-purple-800' },
                             { label: '#tag1', color: 'bg-yellow-200 text-yellow-800' }
                         ]}
+                        // Додаємо виклик функції navigate для переходу на сторінку нотаток
+                        onClick={() => navigate('/notes')}
                     />
                 </div>
 
