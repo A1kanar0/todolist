@@ -2,20 +2,34 @@ export interface NoteCardProps {
     id?: string | number;
     text: string;
     author: string;
-    tags: { label: string; color: string }[];
-    isSelected?: boolean; // Додаємо проп для підсвітки
-    onClick?: () => void; // Додаємо обробник кліку
+    tags?: { label: string; color: string }[];
+    variant?: 'compact' | 'grid';
+    isSelected?: boolean;
+    onClick?: () => void;
 }
 
-export default function NoteCard({ text, author, tags = [], isSelected, onClick }: NoteCardProps) {
+export default function NoteCard({
+                                         text,
+                                         tags = [],
+                                         author,
+                                         variant = 'compact',
+                                         isSelected,
+                                         onClick
+                                     }: NoteCardProps) {
+
+    // Перевіряємо, чи це компактний варіант
+    const isCompact = variant === 'compact';
+
     return (
         <div
             onClick={onClick}
             className={`cursor-pointer rounded-2xl p-5 flex flex-col justify-between min-h-[220px] transition-all
                 ${isSelected
-                    ? 'bg-purple-50/50 border-2 border-[#A890F0] shadow-md' // Стиль активної картки
-                    : 'bg-white border-2 border-transparent border-gray-200 shadow-sm hover:shadow-md'
-                }
+                ? 'bg-purple-50/50 border-2 border-[#A890F0] shadow-md' // Стиль активної картки
+                : isCompact
+                    ? 'bg-gray-200/60 border-2 border-transparent' // Компактний стиль
+                    : 'bg-white border-2 border-transparent border-gray-200 shadow-sm hover:shadow-md' // Звичайний стиль
+            }
             `}
         >
             {/* Верхня частина */}

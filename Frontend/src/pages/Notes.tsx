@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import NoteCard from '../components/notes/NoteCard';
+import NoteCard from '../components/notes/NoteCard.tsx';
 
 // Типізація для нотатки, щоб TypeScript не сварився
 interface NoteItem {
