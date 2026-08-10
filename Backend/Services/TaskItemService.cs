@@ -68,14 +68,36 @@ public class TaskItemService : ITaskItemService
     {
         if (id <= 0)
             throw new ArgumentException("Invalid Task ID");
+    
+        var allTaskIds = await _taskRepository.GetAllTaskAndDescendantIdsAsync(id);
 
-        var images = await _taskImageService.GetImagesByTaskIdAsync(id);
+        if (!allTaskIds.Any()) 
+            return false;
+    
+        var imagesToDelete = await _taskImageService.GetImagesByTaskIdArrayAsync(allTaskIds);
+    
+        var isDeleted = await _taskRepository.DeleteAsync(id);
+    
+        if (isDeleted && imagesToDelete.Any())
+        {
+            _taskImageService.DeleteFiles(imagesToDelete);
+        }
 
+        return isDeleted;
+    }
+    
+    public async Task<bool> DeleteSingleTaskAsync(int id)
+    {
+        if (id <= 0) throw new ArgumentException("Invalid Task ID");
+        
+        var imagesToDelete = await _taskImageService.GetImagesByTaskIdAsync(id);
+        await _taskRepository.UnlinkChildrenAsync(id);
+        
         var isDeleted = await _taskRepository.DeleteAsync(id);
 
-        if (isDeleted)
+        if (isDeleted && imagesToDelete.Any())
         {
-            _taskImageService.DeleteFiles(images);
+            _taskImageService.DeleteFiles(imagesToDelete);
         }
 
         return isDeleted;

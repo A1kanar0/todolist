@@ -36,6 +36,10 @@ public class TaskImageService : ITaskImageService
     {
         return await _repository.GetByTaskIdAsync(taskId);
     }
+    public async Task<IEnumerable<TaskImage>> GetImagesByTaskIdArrayAsync(IEnumerable<int> taskIds)
+    {
+        return await _repository.GetImagesByTaskIdArrayAsync(taskIds);
+    }
 
     public async Task<bool> DeleteImageAsync(int id)
     {

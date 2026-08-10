@@ -121,6 +121,18 @@ public class TaskItemMutations
         
         return true;
     }
+    
+    public async Task<bool> DeleteSingleTaskAsync(int id, [Service] ITaskItemService taskService)
+    {
+        var isDeleted = await taskService.DeleteSingleTaskAsync(id);
+    
+        if (!isDeleted)
+        {
+            throw new GraphQLException("Не вдалося видалити завдання (можливо, його не існує)");
+        }
+    
+        return true;
+    }
 
     public async Task<bool> CompleteTaskAsync(int id, [Service] ITaskItemService taskService)
     {

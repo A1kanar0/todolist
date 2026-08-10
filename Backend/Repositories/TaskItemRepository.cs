@@ -127,6 +127,14 @@ public class TaskItemRepository : ITaskItemRepository
         var affectedRows = await connection.ExecuteAsync(sql, new { Id = id });
         return affectedRows > 0;
     }
+    
+    public async Task<int> UnlinkChildrenAsync(int parentId)
+    {
+        using var connection = _context.CreateConnection();
+        var sql = "UPDATE tasks SET parent_id = NULL WHERE parent_id = @ParentId";
+    
+        return await connection.ExecuteAsync(sql, new { ParentId = parentId });
+    }
 
     public async Task<bool> CompleteTaskAsync(int id)
     {
@@ -135,6 +143,22 @@ public class TaskItemRepository : ITaskItemRepository
         
         var affectedRows = await connection.ExecuteAsync(sql, new { Id = id });
         return affectedRows > 0;
+    }
+    
+    public async Task<IEnumerable<int>> GetAllTaskAndDescendantIdsAsync(int taskId)
+    {
+        using var connection = _context.CreateConnection();
+        var sql = """
+                  WITH RECURSIVE task_tree AS (
+                      SELECT id FROM tasks WHERE id = @Id
+                      UNION ALL
+                      SELECT t.id FROM tasks t
+                      INNER JOIN task_tree tt ON t.parent_id = tt.id
+                  )
+                  SELECT id FROM task_tree;
+                  """;
+
+        return await connection.QueryAsync<int>(sql, new { Id = taskId });
     }
 
     public async Task<IEnumerable<TaskItem>> GetFilteredTasksAsync(TaskFilter filter)
