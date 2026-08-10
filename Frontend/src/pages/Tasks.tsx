@@ -3,13 +3,14 @@ import TaskDetails from '../components/tasks/TaskDetails';
 import { useTaskStore } from '../store/useTaskStore';
 
 export default function Tasks() {
-    // Мокове дерево тасок (3 рівні вкладеності для тесту)
+    // Мокове дерево тасок
     const mockTasksTree: TaskNode[] = [
         {
             id: '1',
             title: 'Розробити фронтенд',
             text: 'Налаштувати React, Tailwind, та базовий Layout сторінки.',
             status: 'in-progress',
+            deadlineDays: 1, // <--- Менше 2 днів, буде ЧЕРВОНИМ
             children: [
                 {
                     id: '1-1',
@@ -22,12 +23,14 @@ export default function Tasks() {
                     title: 'Зробити сторінку Tasks',
                     text: 'Реалізувати рекурсивний компонент для нескінченної вкладеності тасок.',
                     status: 'in-progress',
+                    deadlineDays: 5, // <--- 5 днів, буде СІРИМ
                     children: [
                         {
                             id: '1-2-1',
                             title: 'Придумати візуал "ниток"',
                             text: 'Використати border-l та відступи для відображення ієрархії.',
                             status: 'todo',
+                            deadlineDays: 0, // <--- 0 днів (сьогодні), буде ЧЕРВОНИМ
                         }
                     ]
                 }
@@ -38,6 +41,7 @@ export default function Tasks() {
             title: 'Інтеграція з бекендом',
             text: 'Підключити Axios та написати сервіси для API.',
             status: 'todo',
+            deadlineDays: 3, // <--- 3 дні, буде СІРИМ
         }
     ];
 
