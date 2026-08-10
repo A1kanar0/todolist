@@ -1,4 +1,5 @@
 import { useTaskStore } from '../../store/useTaskStore';
+import Button from '../ui/Button';
 
 export default function CreateTaskModal() {
     const isCreateModalOpen = useTaskStore((state) => state.isCreateModalOpen);
@@ -67,21 +68,24 @@ export default function CreateTaskModal() {
                     ></textarea>
 
                     <div className="flex gap-4 mt-6">
-                        <button
+                        <Button
+                            variant="secondary"
+                            className="flex-1"
                             onClick={closeCreateModal}
-                            className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl transition-colors"
                         >
                             Скасувати
-                        </button>
-                        <button
+                        </Button>
+
+                        <Button
+                            variant="primary"
+                            className="flex-1"
                             onClick={() => {
                                 alert('Тут ми будемо збирати всі ці дані і слати POST-запит на бек!');
                                 closeCreateModal();
                             }}
-                            className="flex-1 py-3 bg-[#A890F0] hover:bg-[#967deb] text-white font-bold rounded-xl transition-colors shadow-sm"
                         >
                             Створити
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>

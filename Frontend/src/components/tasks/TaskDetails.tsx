@@ -1,5 +1,6 @@
 import { useTaskStore } from '../../store/useTaskStore';
 import type { TaskNode } from './TaskItem';
+import Button from '../ui/Button';
 
 interface TaskDetailsProps {
     task: TaskNode | null;
@@ -54,21 +55,22 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
 
                 {/* Кнопки збереження */}
                 <div className="mt-auto pt-4 border-t border-gray-100 flex justify-end gap-3">
-                    <button
+                    <Button
+                        variant="secondary"
                         onClick={() => setIsEditingTask(false)}
-                        className="px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-xl transition-colors"
                     >
                         Cancel
-                    </button>
-                    <button
+                    </Button>
+
+                    <Button
+                        variant="primary"
                         onClick={() => {
                             alert('Тут ми будемо збирати JSON з редактора та зберігати його на бекенді!');
                             setIsEditingTask(false);
                         }}
-                        className="px-6 py-2.5 bg-[#A890F0] hover:bg-[#967deb] text-white font-bold rounded-xl transition-colors shadow-sm"
                     >
                         Save Changes
-                    </button>
+                    </Button>
                 </div>
             </div>
         );
@@ -92,15 +94,20 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
             </div>
 
             <div className="mt-auto pt-6 border-t border-gray-100 flex gap-3">
-                <button
+                <Button
+                    variant="secondary"
+                    className="flex-1"
                     onClick={() => setIsEditingTask(true)}
-                    className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg transition-colors"
                 >
                     Edit
-                </button>
-                <button className="flex-1 py-2 bg-[#A890F0] hover:bg-[#967deb] text-white font-semibold rounded-lg transition-colors">
+                </Button>
+
+                <Button
+                    variant="primary"
+                    className="flex-1"
+                >
                     Complete
-                </button>
+                </Button>
             </div>
         </div>
     );

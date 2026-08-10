@@ -1,49 +1,56 @@
 import { NavLink } from 'react-router-dom';
+import { useTaskStore } from '../../store/useTaskStore';
+import Button from '../ui/Button';
 
 export default function Sidebar() {
-    // Функція для стилізації активного та неактивного пунктів меню
-    const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
-        `flex items-center justify-between p-3 mb-2 rounded-xl transition-colors font-semibold ${
+    const openSettingsModal = useTaskStore((state) => state.openSettingsModal);
+
+    // Динамічні класи для верхнього меню (стиль активної кнопки як на скріні)
+    const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+        `flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${
             isActive
-                ? 'bg-[#8B78CC] text-white'
-                : 'text-gray-700 hover:bg-gray-100'
+                ? 'bg-[#A890F0] text-white shadow-sm' // Суцільний фіолетовий фон і білий текст
+                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
         }`;
 
     return (
-        <aside className="w-64 h-full bg-[#F8F9FA] flex flex-col border-r border-gray-200">
-            {/* Логотип */}
-            <div className="p-8 font-bold text-2xl text-gray-900 tracking-wide">
-                LOGO & NAME
+        <div className="w-64 h-full bg-white dark:bg-gray-900 dark:text-gray-100 border-r border-gray-200 flex flex-col justify-between p-6">
+
+            {/* Верхня частина: Логотип та Навігація */}
+            <div className="flex flex-col gap-8">
+
+                {/* Логотип */}
+                <div className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight px-4">
+                    Todolisy<span className="text-[#A890F0]">.</span>
+                </div>
+
+                {/* Основне меню сторінок */}
+                <nav className="flex flex-col gap-2">
+                    <NavLink to="/" className={navLinkClass}>
+                        <span className="text-xl">🏠</span> Home
+                    </NavLink>
+                    <NavLink to="/tasks" className={navLinkClass}>
+                        <span className="text-xl">✅</span> Tasks
+                    </NavLink>
+                    <NavLink to="/notes" className={navLinkClass}>
+                        <span className="text-xl">📝</span> Notes
+                    </NavLink>
+                </nav>
             </div>
 
-            {/* Основна навігація */}
-            <nav className="flex-1 px-4 mt-2">
-                <NavLink to="/" className={navLinkClasses}>
-                    <span>Home</span>
-                    <span className="text-sm">7</span>
-                </NavLink>
-                <NavLink to="/tasks" className={navLinkClasses}>
-                    <span>Tasks</span>
-                    <span className="text-sm">12</span>
-                </NavLink>
-                <NavLink to="/notes" className={navLinkClasses}>
-                    <span>Notes</span>
-                    <span className="text-sm">5</span>
-                </NavLink>
-            </nav>
-
-            {/* Нижнє меню */}
-            <div className="p-4 mb-4 text-gray-700 font-semibold">
-                <button className="flex items-center w-full p-3 hover:bg-gray-100 rounded-xl transition-colors">
-                    <span>Google Drive</span>
-                </button>
-                <button className="flex items-center w-full p-3 hover:bg-gray-100 rounded-xl transition-colors">
-                    <span>Admin panel</span>
-                </button>
-                <button className="flex items-center w-full p-3 hover:bg-gray-100 rounded-xl transition-colors">
-                    <span>Settings</span>
-                </button>
+            {/* Нижнє меню з нашими новими UI-компонентами */}
+            <div className="flex flex-col gap-2 mt-auto pt-6 border-t border-gray-100">
+                <Button variant="sidebar" icon="☁️">
+                    Google Drive
+                </Button>
+                <Button variant="sidebar" icon="🛡️">
+                    Admin
+                </Button>
+                <Button variant="sidebar" icon="⚙️" onClick={openSettingsModal}>
+                    Settings
+                </Button>
             </div>
-        </aside>
+
+        </div>
     );
 }
