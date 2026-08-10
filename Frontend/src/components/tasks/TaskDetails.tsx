@@ -1,4 +1,4 @@
-import type { TaskNode } from './NestedTaskItem';
+import type { TaskNode } from './TaskItem.tsx';
 
 interface TaskDetailsProps {
     task: TaskNode | null;

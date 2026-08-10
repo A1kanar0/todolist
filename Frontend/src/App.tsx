@@ -3,10 +3,12 @@ import Sidebar from './components/layout/Sidebar';
 import Home from './pages/Home';
 import Tasks from './pages/Tasks';
 import Notes from './pages/Notes';
+import CreateTaskModal from './components/tasks/CreateTaskModal';
 
 export default function App() {
     return (
         <BrowserRouter>
+            <CreateTaskModal />
             {/* Головний контейнер на весь екран */}
             <div className="flex h-screen bg-[#F8F9FA] text-gray-900 font-sans">
 

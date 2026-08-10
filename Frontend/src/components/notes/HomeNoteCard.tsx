@@ -7,7 +7,7 @@ interface NoteCardProps {
     variant?: 'compact' | 'grid';
 }
 
-export default function NoteCard({ text, tags, author, variant = 'compact' }: NoteCardProps) {
+export default function HomeNoteCard({ text, tags, author, variant = 'compact' }: NoteCardProps) {
     // Якщо варіант compact - робимо картку меншою та сірішою, якщо grid - білою та більшою
     const isCompact = variant === 'compact';
 
