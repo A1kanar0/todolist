@@ -21,7 +21,13 @@ interface NestedTaskItemProps {
 export default function TaskItem({ task, depth = 0, hideChildren = false, onNavigate }: NestedTaskItemProps) {
     const [isOpen, setIsOpen] = useState(true);
     const hasChildren = task.children && task.children.length > 0;
+
+    // 1. ЗМІНА: Дістаємо selectedTask зі стора
     const setSelectedTask = useTaskStore((state) => state.setSelectedTask);
+    const selectedTask = useTaskStore((state) => state.selectedTask);
+
+    // 2. ЗМІНА: Перевіряємо чи є ця таска вибраною
+    const isSelected = selectedTask?.id === task.id;
 
     const statusColors = {
         'todo': 'bg-gray-200 text-gray-700',
@@ -36,7 +42,12 @@ export default function TaskItem({ task, depth = 0, hideChildren = false, onNavi
                     setSelectedTask(task);
                     if (onNavigate) onNavigate(task);
                 }}
-                className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:border-[#A890F0] transition-colors cursor-pointer group"
+                // 3. ЗМІНА: Динамічні класи для підсвітки обраної таски (фіолетовий фон + рамка)
+                className={`p-4 rounded-xl border shadow-sm transition-colors cursor-pointer group ${
+                    isSelected
+                        ? 'bg-purple-50/50 border-2 border-[#A890F0]'
+                        : 'bg-white border-gray-200 hover:border-[#A890F0]'
+                }`}
             >
                 <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
@@ -58,20 +69,23 @@ export default function TaskItem({ task, depth = 0, hideChildren = false, onNavi
                             </button>
                         )}
 
-                        <span className={`font-bold text-gray-900 group-hover:text-[#7E69AB] transition-colors ${!hasChildren || hideChildren ? 'ml-6' : ''}`}>
-              {task.title}
-            </span>
+                        {/* ТРОХИ ЗМІНЕНО: заголовок теж стає фіолетовим, коли таска вибрана */}
+                        <span className={`font-bold transition-colors ${!hasChildren || hideChildren ? 'ml-6' : ''} ${
+                            isSelected ? 'text-[#A890F0]' : 'text-gray-900 group-hover:text-[#7E69AB]'
+                        }`}>
+                            {task.title}
+                        </span>
                     </div>
 
                     <div className="flex items-center gap-3">
                         {task.category && (
                             <span className="text-gray-500 text-sm italic">
-                {task.category}
-              </span>
+                                {task.category}
+                            </span>
                         )}
                         <span className={`px-2 py-0.5 rounded text-xs font-semibold ${statusColors[task.status]}`}>
-              {task.status}
-            </span>
+                            {task.status}
+                        </span>
                     </div>
                 </div>
 
@@ -86,8 +100,8 @@ export default function TaskItem({ task, depth = 0, hideChildren = false, onNavi
                                 task.deadlineDays < 2 ? 'text-red-500' : 'text-gray-400'
                             }`}
                         >
-              {task.deadlineDays} {task.deadlineDays === 1 ? 'day' : 'days'}
-            </span>
+                            {task.deadlineDays} {task.deadlineDays === 1 ? 'day' : 'days'}
+                        </span>
                     )}
                 </div>
             </div>
