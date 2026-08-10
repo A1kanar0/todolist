@@ -1,39 +1,12 @@
-import TaskItem from '../components/tasks/TaskItem';
-import NoteCard from '../components/notes/NoteCard';
+
+import NoteCard from '../components/notes/HomeNoteCard';
 
 export default function Home() {
     // Фейкові дані для перевірки візуалу
-    const dummyTaskText = "Task text Task text Task text Task text Task text Task text Task text Task text Task text Task text Task text Task text Task text Task text Task text Task text Task text";
 
     return (
         <div className="flex gap-8 h-full">
             {/* Головна колонка з тасками (займає більшу частину) */}
-            <div className="flex-1">
-                <h1 className="text-4xl font-extrabold text-gray-800 mb-8 tracking-tight">Home</h1>
-
-                <div className="flex flex-col">
-                    <TaskItem
-                        title="Task 1"
-                        text={dummyTaskText}
-                        category="Category"
-                        deadline="1 day"
-                    />
-                    <TaskItem
-                        title="Task 1"
-                        executors="Executor1 | Executor 2"
-                        text={dummyTaskText}
-                        category="Category"
-                        deadline="1 day"
-                    />
-                    <TaskItem
-                        title="Task 1"
-                        executors="Executor1 | Executor 2"
-                        text={dummyTaskText}
-                        category="Category"
-                        deadline="1 day"
-                    />
-                </div>
-            </div>
 
             {/* Права панель для нотаток (фіксована ширина, сірий фон) */}
             <div className="w-80 bg-[#F3F4F6] rounded-2xl p-6 flex flex-col">
