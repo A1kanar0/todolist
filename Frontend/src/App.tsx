@@ -7,6 +7,8 @@ import Notes from './pages/Notes';
 import CreateTaskModal from './components/tasks/CreateTaskModal';
 import SettingsModal from './components/layout/SettingsModal';
 import { useTaskStore } from './store/useTaskStore';
+import Admin from './pages/Admin';
+import ProtectedAdminRoute from './components/layout/ProtectedAdminRoute';
 
 export default function App() {
     // Дістаємо поточну тему зі стора
@@ -40,6 +42,11 @@ export default function App() {
                         <Route path="/" element={<Home />} />
                         <Route path="/tasks" element={<Tasks />} />
                         <Route path="/notes" element={<Notes />} />
+
+                        {/* Захищені роути для адмінів */}
+                        <Route element={<ProtectedAdminRoute />}>
+                            <Route path="/admin" element={<Admin />} />
+                        </Route>
                     </Routes>
                 </div>
             </div>

@@ -1,9 +1,14 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useTaskStore } from '../../store/useTaskStore';
 import Button from '../ui/Button';
+import { useAuthStore } from '../../store/useAuthStore';
 
 export default function Sidebar() {
     const openSettingsModal = useTaskStore((state) => state.openSettingsModal);
+
+    // Дістаємо роль юзера з нашого нового AuthStore
+    const userRole = useAuthStore((state) => state.userRole);
+    const navigate = useNavigate();
 
     // Динамічні класи для верхнього меню (стиль активної кнопки як на скріні)
     const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -43,9 +48,14 @@ export default function Sidebar() {
                 <Button variant="sidebar" icon="☁️">
                     Google Drive
                 </Button>
-                <Button variant="sidebar" icon="🛡️">
-                    Admin
-                </Button>
+
+                {/* Умовний рендер кнопки адмінки: показуємо тільки якщо роль 'admin' */}
+                {userRole === 'admin' && (
+                    <Button variant="sidebar" icon="🛡️" onClick={() => navigate('/admin')}>
+                        Admin
+                    </Button>
+                )}
+
                 <Button variant="sidebar" icon="⚙️" onClick={openSettingsModal}>
                     Settings
                 </Button>
