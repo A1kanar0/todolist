@@ -1,13 +1,12 @@
 import { create } from 'zustand';
 
-// 1. Інтерфейс переїхав сюди, щоб не було циклічних залежностей!
 export interface TaskNode {
     id: string;
     title: string;
     text: string;
     status: 'todo' | 'in-progress' | 'done';
     children?: TaskNode[];
-    deadline?: string; // Змінили на рядок (datetime)
+    deadline?: string;
     category?: string;
     categoryId?: string;
     parentId?: string | null;
@@ -20,6 +19,7 @@ interface TaskStore {
     error: string | null;
     fetchTasks: () => Promise<void>;
     updateTask: (input: any) => Promise<void>;
+    deleteTask: (id: number) => Promise<void>;
 
     // UI Стани
     selectedTask: TaskNode | null;
@@ -52,13 +52,18 @@ const UPDATE_TASK_MUTATION = `
   }
 `;
 
+const DELETE_TASK_MUTATION = `
+  mutation DeleteTask($id: Int!) {
+    deleteTask(id: $id)
+  }
+`;
+
 const buildTaskTree = (flatTasks: any[]): TaskNode[] => {
     if (!Array.isArray(flatTasks)) return [];
 
     const taskMap = new Map<string, TaskNode>();
     const tree: TaskNode[] = [];
 
-    // Крок 1: Створюємо всі вузли
     flatTasks.forEach(task => {
         if (!task) return;
         const stringId = task.id.toString();
@@ -74,7 +79,6 @@ const buildTaskTree = (flatTasks: any[]): TaskNode[] => {
         });
     });
 
-    // Крок 2: Будуємо дерево
     flatTasks.forEach(task => {
         if (!task) return;
         const stringId = task.id.toString();
@@ -117,7 +121,7 @@ export const useTaskStore = create<TaskStore>((set) => ({
             const tasksTree = buildTaskTree(result.data.tasks);
             set({ tasks: tasksTree, isLoading: false });
         } catch (error: any) {
-            console.error('Помилка:', error);
+            console.error('Помилка завантаження:', error);
             set({ error: error.message, isLoading: false });
         }
     },
@@ -141,6 +145,36 @@ export const useTaskStore = create<TaskStore>((set) => ({
             set({ isEditingTask: false });
         } catch (error: any) {
             console.error('Помилка оновлення:', error);
+            set({ error: error.message, isLoading: false });
+        }
+    },
+
+    deleteTask: async (id) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await fetch('http://localhost:5148/graphql/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    query: DELETE_TASK_MUTATION,
+                    variables: { id }
+                }),
+            });
+            const result = await response.json();
+            if (result.errors) throw new Error(result.errors[0].message);
+
+            // Якщо була вибрана ця ж таска — скидаємо вибір та закриваємо панель
+            const currentSelected = useTaskStore.getState().selectedTask;
+            if (currentSelected && Number(currentSelected.id) === id) {
+                set({ selectedTask: null, isEditingTask: false });
+            } else {
+                set({ isEditingTask: false });
+            }
+
+            await useTaskStore.getState().fetchTasks();
+        } catch (error: any) {
+            console.error('Помилка видалення:', error);
             set({ error: error.message, isLoading: false });
         }
     },

@@ -14,7 +14,6 @@ const formatForDateTimeInput = (isoString?: string) => {
     return new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
 };
 
-// Плоский список для select (виключаючи поточну таску)
 const getFlatTaskList = (nodes: TaskNode[], excludeId?: string): { id: string; title: string }[] => {
     let result: { id: string; title: string }[] = [];
     nodes.forEach(node => {
@@ -26,7 +25,6 @@ const getFlatTaskList = (nodes: TaskNode[], excludeId?: string): { id: string; t
     return result;
 };
 
-// Пошук імені батька
 const getParentTitle = (nodes: TaskNode[], parentId?: string | null): string => {
     if (!parentId) return 'Без батьківського';
     const all = getFlatTaskList(nodes);
@@ -38,6 +36,7 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
     const isEditingTask = useTaskStore((state) => state.isEditingTask);
     const setIsEditingTask = useTaskStore((state) => state.setIsEditingTask);
     const updateTask = useTaskStore((state) => state.updateTask);
+    const deleteTask = useTaskStore((state) => state.deleteTask);
     const tasksTree = useTaskStore((state) => state.tasks);
 
     const [title, setTitle] = useState('');
@@ -72,9 +71,14 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
             isCompleted: task.status === 'done',
             deadline: deadline ? new Date(deadline).toISOString() : null,
             parentId: parentId ? Number(parentId) : null,
-            // categoryId можна додати пізніше
         };
         await updateTask(input);
+    };
+
+    const handleDelete = async () => {
+        if (window.confirm(`Ви впевнені, що хочете видалити завдання "${task.title}"?`)) {
+            await deleteTask(Number(task.id));
+        }
     };
 
     const availableParents = getFlatTaskList(tasksTree, task.id);
@@ -131,20 +135,27 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
                     </div>
                 </div>
 
-                {/* Щоб TextEditor віддавав дані, йому бажано передати onChange,
-                    але якщо він поки його не приймає, просто лишаємо як є. */}
+                {/* Поки що передаємо тільки defaultValue. Коли TextEditor буде готовий приймати onChange — додамо його сюди. */}
                 <TextEditor
                     defaultValue={content}
-                    onChange={(val: string) => setContent(val)}
                 />
 
-                <div className="mt-auto pt-4 border-t border-gray-100 flex justify-end gap-3">
-                    <Button variant="secondary" onClick={() => setIsEditingTask(false)}>
-                        Cancel
-                    </Button>
-                    <Button variant="primary" onClick={handleSave}>
-                        Save Changes
-                    </Button>
+                <div className="mt-auto pt-4 border-t border-gray-100 flex justify-between items-center">
+                    <button
+                        onClick={handleDelete}
+                        className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-semibold rounded-xl border border-red-200 transition-colors text-sm shadow-sm"
+                    >
+                        Delete Task
+                    </button>
+
+                    <div className="flex gap-3">
+                        <Button variant="secondary" onClick={() => setIsEditingTask(false)}>
+                            Cancel
+                        </Button>
+                        <Button variant="primary" onClick={handleSave}>
+                            Save Changes
+                        </Button>
+                    </div>
                 </div>
             </div>
         );

@@ -10,32 +10,30 @@ export interface NoteCardProps {
 }
 
 export default function NoteCard({
-    title,
-    text,
-    tags = [],
-    author,
-    variant = 'compact',
-    isSelected,
-    onClick
-}: NoteCardProps) {
+                                     title,
+                                     text,
+                                     tags = [],
+                                     author,
+                                     // variant прибрано звідси, щоб лінтер не сварився на невикористану змінну
+                                     isSelected,
+                                     onClick
+                                 }: NoteCardProps) {
 
     return (
         <div
             onClick={onClick}
-            // Зробили кольори ідентичними до TaskItem
             className={`cursor-pointer rounded-2xl p-5 flex flex-col justify-between min-h-[220px] transition-all border-2 group
                 ${isSelected
-                    ? 'bg-purple-50/50 border-[#A890F0] shadow-md'
-                    : 'bg-white border-gray-200 hover:border-[#A890F0] shadow-sm hover:shadow-md'
-                }
+                ? 'bg-purple-50/50 border-[#A890F0] shadow-md'
+                : 'bg-white border-gray-200 hover:border-[#A890F0] shadow-sm hover:shadow-md'
+            }
             `}
         >
             {/* Верхня частина */}
             <div>
                 <div className="flex justify-between items-start mb-3">
-                    {/* Також додали зміну кольору тексту при виділенні, як у тасках */}
                     <span className={`font-extrabold text-lg transition-colors ${isSelected ? 'text-[#A890F0]' : 'text-gray-900 group-hover:text-[#7E69AB]'
-                        }`}>
+                    }`}>
                         {title || 'Без назви'}
                     </span>
 

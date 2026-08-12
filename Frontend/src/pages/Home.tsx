@@ -1,20 +1,20 @@
 import { useNavigate } from 'react-router-dom';
-import { useTaskStore } from '../store/useTaskStore';
-import TaskItem, { type TaskNode } from '../components/tasks/TaskItem';
+import { useTaskStore, type TaskNode } from '../store/useTaskStore';
+import TaskItem from '../components/tasks/TaskItem';
 import NoteCard from '../components/notes/NoteCard.tsx';
 
 export default function Home() {
     const navigate = useNavigate();
     const openCreateModal = useTaskStore((state) => state.openCreateModal);
 
-    // Фейкові дані для перевірки візуалу
+    // Фейкові дані для перевірки візуалу (оновлено під новий інтерфейс з датами)
     const homeTasks: TaskNode[] = [
         {
             id: '3',
             title: 'Підготувати реліз',
             text: 'Перевірити всі баги перед пушем на прод.',
             status: 'todo',
-            deadlineDays: 0,
+            deadline: new Date(Date.now() + 86400000).toISOString(), // +1 день
             category: 'Management'
         },
         {
@@ -22,7 +22,7 @@ export default function Home() {
             title: 'Розробити фронтенд',
             text: 'Налаштувати React, Tailwind, та базовий Layout сторінки.',
             status: 'in-progress',
-            deadlineDays: 1,
+            deadline: new Date(Date.now() + 86400000 * 2).toISOString(), // +2 дні
             category: 'Development'
         },
         {
@@ -30,13 +30,17 @@ export default function Home() {
             title: 'Інтеграція з бекендом',
             text: 'Підключити Axios та написати сервіси для API.',
             status: 'todo',
-            deadlineDays: 5,
+            deadline: new Date(Date.now() + 86400000 * 5).toISOString(), // +5 днів
             category: 'API'
         }
     ];
 
-    // Сортуємо таски за дедлайном
-    const sortedTasks = [...homeTasks].sort((a, b) => (a.deadlineDays || 0) - (b.deadlineDays || 0));
+    // Сортуємо таски за дедлайном (тепер по мілісекундах)
+    const sortedTasks = [...homeTasks].sort((a, b) => {
+        const dateA = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+        const dateB = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+        return dateA - dateB;
+    });
 
     return (
         <div className="flex gap-8 h-full">
@@ -75,7 +79,6 @@ export default function Home() {
                         author="Author"
                         tags={[
                         ]}
-                        // Додаємо виклик функції navigate для переходу на сторінку нотаток
                         onClick={() => navigate('/notes')}
                     />
                 </div>
