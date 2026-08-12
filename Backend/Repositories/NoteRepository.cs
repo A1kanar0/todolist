@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using Backend.Entities;
 using Backend.Data;
 

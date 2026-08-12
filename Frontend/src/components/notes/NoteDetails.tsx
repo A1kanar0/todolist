@@ -6,9 +6,10 @@ import TextEditor from '../ui/TextEditor';
 // Типізація для нотатки (можеш винести в окремий файл types.ts)
 export interface NoteItem {
     id: number | string;
+    title: string;
     text: string;
     author: string;
-    tags: { label: string; color: string }[];
+    tags: { name: string; color: string }[];
 }
 
 interface NoteDetailsProps {
@@ -34,9 +35,15 @@ export default function NoteDetails({ note }: NoteDetailsProps) {
     if (isEditingNote) {
         return (
             <div className="flex-1 flex flex-col bg-white rounded-xl p-5 border border-gray-200 shadow-sm overflow-hidden min-h-[400px]">
-                {/* Інформаційний заголовок (бо в нотаток зазвичай немає окремого title) */}
+                {/* Інформаційний заголовок та інпут для назви */}
                 <div className="mb-4">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Редагування нотатки</span>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Редагування нотатки</span>
+                    <input
+                        type="text"
+                        defaultValue={note.title}
+                        className="w-full text-2xl font-bold text-gray-900 bg-gray-50 p-3 rounded-lg outline-none focus:ring-2 focus:ring-[#A890F0] transition-all"
+                        placeholder="Назва нотатки..."
+                    />
                 </div>
 
                 {/* Використовуємо наш новий ізольований компонент редактора */}
@@ -71,11 +78,16 @@ export default function NoteDetails({ note }: NoteDetailsProps) {
     return (
         <div className="flex-1 flex flex-col bg-white rounded-xl p-6 shadow-sm border border-gray-200 overflow-y-auto custom-scrollbar">
 
+            {/* Назва нотатки */}
+            <div className="mb-4">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">{note.title}</h3>
+            </div>
+
             {/* Теги обраної нотатки */}
             <div className="flex gap-1.5 flex-wrap mb-4">
                 {note.tags?.map((tag, index) => (
                     <span key={index} className={`px-2.5 py-1 rounded-md text-xs font-bold ${tag.color}`}>
-                        {tag.label}
+                        {tag.name}
                     </span>
                 ))}
             </div>
@@ -101,7 +113,6 @@ export default function NoteDetails({ note }: NoteDetailsProps) {
                     onClick={() => setIsEditingNote(true)}
                 />
 
-                {/* Кнопка Delete (залишив той приємний червоний колір) */}
                 <button
                     className="flex-1 py-2.5 bg-[#FF6B6B] hover:bg-[#FF5252] text-white font-bold text-sm rounded-xl transition-colors"
                     onClick={() => alert('Тут буде логіка видалення')}

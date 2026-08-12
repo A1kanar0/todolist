@@ -28,6 +28,10 @@ const GET_NOTES_QUERY = `
       title
       content
       authorId
+      tags {
+        name
+        color
+      }
     }
   }
 `;
@@ -62,9 +66,10 @@ export const useNoteStore = create<NoteStore>((set) => ({
             // 2. МАПІНГ ДАНИХ (Перетворюємо C# поля на ті, що чекає UI)
             const mappedNotes: NoteItem[] = result.data.notes.map((backendNote: any) => ({
                 id: backendNote.id,
+                title: backendNote.title,
                 text: backendNote.content, // Перекидаємо content у text
                 author: `Author ID: ${backendNote.authorId}`, // Тимчасова заглушка, бо імені поки немає
-                tags: [] // Порожній масив тегів, щоб .map() у компонентах не крашився
+                tags: backendNote.tags || []
             }));
 
             set({ notes: mappedNotes, isLoading: false });

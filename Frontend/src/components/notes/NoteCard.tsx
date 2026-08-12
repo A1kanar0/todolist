@@ -1,46 +1,48 @@
 export interface NoteCardProps {
     id?: string | number;
+    title?: string;
     text: string;
     author: string;
-    tags?: { label: string; color: string }[];
+    tags?: { name: string; color: string }[];
     variant?: 'compact' | 'grid';
     isSelected?: boolean;
     onClick?: () => void;
 }
 
 export default function NoteCard({
-                                         text,
-                                         tags = [],
-                                         author,
-                                         variant = 'compact',
-                                         isSelected,
-                                         onClick
-                                     }: NoteCardProps) {
-
-    // Перевіряємо, чи це компактний варіант
-    const isCompact = variant === 'compact';
+    title,
+    text,
+    tags = [],
+    author,
+    variant = 'compact',
+    isSelected,
+    onClick
+}: NoteCardProps) {
 
     return (
         <div
             onClick={onClick}
-            className={`cursor-pointer rounded-2xl p-5 flex flex-col justify-between min-h-[220px] transition-all
+            // Зробили кольори ідентичними до TaskItem
+            className={`cursor-pointer rounded-2xl p-5 flex flex-col justify-between min-h-[220px] transition-all border-2 group
                 ${isSelected
-                ? 'bg-purple-50/50 border-2 border-[#A890F0] shadow-md' // Стиль активної картки
-                : isCompact
-                    ? 'bg-gray-200/60 border-2 border-transparent' // Компактний стиль
-                    : 'bg-white border-2 border-transparent border-gray-200 shadow-sm hover:shadow-md' // Звичайний стиль
-            }
+                    ? 'bg-purple-50/50 border-[#A890F0] shadow-md'
+                    : 'bg-white border-gray-200 hover:border-[#A890F0] shadow-sm hover:shadow-md'
+                }
             `}
         >
             {/* Верхня частина */}
             <div>
                 <div className="flex justify-between items-start mb-3">
-                    <span className="font-extrabold text-gray-900 text-lg">Note</span>
+                    {/* Також додали зміну кольору тексту при виділенні, як у тасках */}
+                    <span className={`font-extrabold text-lg transition-colors ${isSelected ? 'text-[#A890F0]' : 'text-gray-900 group-hover:text-[#7E69AB]'
+                        }`}>
+                        {title || 'Без назви'}
+                    </span>
 
                     <div className="flex gap-1.5 flex-wrap justify-end">
                         {tags?.map((tag, index) => (
                             <span key={index} className={`px-2.5 py-1 rounded-md text-xs font-bold ${tag.color}`}>
-                                {tag.label}
+                                {tag.name}
                             </span>
                         ))}
                     </div>

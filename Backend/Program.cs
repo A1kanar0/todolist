@@ -86,7 +86,7 @@ builder.Services
     .AddType<CategoryType>()
     .AddType<TagType>()
     .AddType<TaskItemType>()
-    .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = builder.Environment.IsDevelopment()) // УБРАТЬ НАХУЙ З ПРОДА
+    .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true) // УБРАТЬ НАХУЙ З ПРОДА
     .AddAuthorization();
     
 
