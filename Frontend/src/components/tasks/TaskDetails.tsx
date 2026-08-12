@@ -1,5 +1,5 @@
-import { useTaskStore } from '../../store/useTaskStore';
-import type { TaskNode } from './TaskItem';
+import { useState, useEffect } from 'react';
+import { useTaskStore, type TaskNode } from '../../store/useTaskStore';
 import Button from '../ui/Button';
 import EditButton from '../ui/EditButton';
 import TextEditor from '../ui/TextEditor';
@@ -8,9 +8,53 @@ interface TaskDetailsProps {
     task: TaskNode | null;
 }
 
+const formatForDateTimeInput = (isoString?: string) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    return new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+};
+
+// Плоский список для select (виключаючи поточну таску)
+const getFlatTaskList = (nodes: TaskNode[], excludeId?: string): { id: string; title: string }[] => {
+    let result: { id: string; title: string }[] = [];
+    nodes.forEach(node => {
+        if (node.id !== excludeId) {
+            result.push({ id: node.id, title: node.title });
+            if (node.children) result = result.concat(getFlatTaskList(node.children, excludeId));
+        }
+    });
+    return result;
+};
+
+// Пошук імені батька
+const getParentTitle = (nodes: TaskNode[], parentId?: string | null): string => {
+    if (!parentId) return 'Без батьківського';
+    const all = getFlatTaskList(nodes);
+    const found = all.find(t => t.id === parentId);
+    return found ? found.title : 'Невідомо';
+};
+
 export default function TaskDetails({ task }: TaskDetailsProps) {
     const isEditingTask = useTaskStore((state) => state.isEditingTask);
     const setIsEditingTask = useTaskStore((state) => state.setIsEditingTask);
+    const updateTask = useTaskStore((state) => state.updateTask);
+    const tasksTree = useTaskStore((state) => state.tasks);
+
+    const [title, setTitle] = useState('');
+    const [category, setCategory] = useState('');
+    const [deadline, setDeadline] = useState('');
+    const [parentId, setParentId] = useState('');
+    const [content, setContent] = useState('');
+
+    useEffect(() => {
+        if (task) {
+            setTitle(task.title || '');
+            setCategory(task.category || '');
+            setDeadline(formatForDateTimeInput(task.deadline));
+            setParentId(task.parentId || '');
+            setContent(task.text || '');
+        }
+    }, [task]);
 
     if (!task) {
         return (
@@ -20,26 +64,40 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
         );
     }
 
-    // РЕЖИМ РЕДАГУВАННЯ
+    const handleSave = async () => {
+        const input = {
+            id: Number(task.id),
+            title,
+            content,
+            isCompleted: task.status === 'done',
+            deadline: deadline ? new Date(deadline).toISOString() : null,
+            parentId: parentId ? Number(parentId) : null,
+            // categoryId можна додати пізніше
+        };
+        await updateTask(input);
+    };
+
+    const availableParents = getFlatTaskList(tasksTree, task.id);
+
     if (isEditingTask) {
         return (
             <div className="flex-1 flex flex-col bg-white rounded-xl p-5 border border-gray-200 shadow-sm overflow-hidden overflow-y-auto custom-scrollbar">
-                {/* Заголовок */}
                 <div className="mb-4">
                     <input
                         type="text"
-                        defaultValue={task.title}
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
                         className="w-full text-2xl font-bold text-gray-900 bg-gray-50 p-3 rounded-lg outline-none focus:ring-2 focus:ring-[#A890F0] transition-all"
                         placeholder="Назва завдання..."
                     />
                 </div>
 
-                {/* Метадані (Категорія, Дедлайн, Батьківський елемент) */}
                 <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
                         <label className="block text-sm font-bold text-gray-700 mb-1">Категорія</label>
                         <select
-                            defaultValue={task.category || ''}
+                            value={category}
+                            onChange={(e) => setCategory(e.target.value)}
                             className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#A890F0] focus:border-[#A890F0] block p-2.5 outline-none cursor-pointer"
                         >
                             <option value="">Без категорії</option>
@@ -50,46 +108,41 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
                         </select>
                     </div>
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-1">Дедлайн (днів)</label>
+                        <label className="block text-sm font-bold text-gray-700 mb-1">Дедлайн</label>
                         <input
-                            type="number"
-                            defaultValue={task.deadlineDays}
-                            placeholder="0"
+                            type="datetime-local"
+                            value={deadline}
+                            onChange={(e) => setDeadline(e.target.value)}
                             className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#A890F0] focus:border-[#A890F0] block p-2.5 outline-none"
                         />
                     </div>
                     <div className="col-span-2">
                         <label className="block text-sm font-bold text-gray-700 mb-1">Батьківське завдання</label>
                         <select
+                            value={parentId}
+                            onChange={(e) => setParentId(e.target.value)}
                             className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-[#A890F0] focus:border-[#A890F0] block p-2.5 outline-none cursor-pointer"
                         >
-                            {/* Поки що заглушка, пізніше тут буде масив всіх тасок з бекенду */}
                             <option value="">Без батьківського (кореневе завдання)</option>
-                            <option value="1">Розробити фронтенд</option>
-                            <option value="2">Інтеграція з бекендом</option>
+                            {availableParents.map(p => (
+                                <option key={p.id} value={p.id}>{p.title}</option>
+                            ))}
                         </select>
                     </div>
                 </div>
 
-                {/* Використовуємо наш новий ізольований компонент редактора */}
-                <TextEditor defaultValue={task.text} />
+                {/* Щоб TextEditor віддавав дані, йому бажано передати onChange,
+                    але якщо він поки його не приймає, просто лишаємо як є. */}
+                <TextEditor
+                    defaultValue={content}
+                    onChange={(val: string) => setContent(val)}
+                />
 
-                {/* Кнопки збереження */}
                 <div className="mt-auto pt-4 border-t border-gray-100 flex justify-end gap-3">
-                    <Button
-                        variant="secondary"
-                        onClick={() => setIsEditingTask(false)}
-                    >
+                    <Button variant="secondary" onClick={() => setIsEditingTask(false)}>
                         Cancel
                     </Button>
-
-                    <Button
-                        variant="primary"
-                        onClick={() => {
-                            alert('Тут ми будемо збирати всі нові поля і зберігати на бекенді!');
-                            setIsEditingTask(false);
-                        }}
-                    >
+                    <Button variant="primary" onClick={handleSave}>
                         Save Changes
                     </Button>
                 </div>
@@ -97,7 +150,6 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
         );
     }
 
-    // ЗВИЧАЙНИЙ РЕЖИМ ПЕРЕГЛЯДУ
     return (
         <div className="flex-1 flex flex-col bg-white rounded-xl p-5 border border-gray-200 shadow-sm overflow-y-auto custom-scrollbar">
             <div className="mb-4">
@@ -107,7 +159,6 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
                 </span>
             </div>
 
-            {/* Блок з Метаданими (Тільки для читання) */}
             <div className="flex flex-wrap gap-4 mb-6 border-y border-gray-100 py-4">
                 <div className="flex flex-col">
                     <span className="text-xs font-bold text-gray-400 uppercase mb-1">Категорія</span>
@@ -115,27 +166,20 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
                         {task.category || 'Немає'}
                     </span>
                 </div>
-
                 <div className="w-px bg-gray-200"></div>
-
                 <div className="flex flex-col">
                     <span className="text-xs font-bold text-gray-400 uppercase mb-1">Дедлайн</span>
                     <span className={`text-sm font-bold px-2 py-1 rounded-md border ${
-                        task.deadlineDays !== undefined && task.deadlineDays <= 1
-                            ? 'bg-red-50 text-red-600 border-red-100'
-                            : 'bg-gray-50 text-gray-800 border-gray-100'
+                        task.deadline ? 'bg-gray-50 text-gray-800 border-gray-100' : 'bg-gray-50 text-gray-400 border-gray-100'
                     } inline-block`}>
-                        {task.deadlineDays !== undefined ? `${task.deadlineDays} days` : 'Немає'}
+                        {task.deadline ? new Date(task.deadline).toLocaleDateString('uk-UA') : 'Немає'}
                     </span>
                 </div>
-
                 <div className="w-px bg-gray-200"></div>
-
                 <div className="flex flex-col">
                     <span className="text-xs font-bold text-gray-400 uppercase mb-1">Батьківське</span>
                     <span className="text-sm font-semibold text-gray-800 bg-gray-50 px-2 py-1 rounded-md border border-gray-100 inline-block">
-                        {/* Пізніше тут буде пошук по id серед тасок, щоб вивести ім'я */}
-                        Без батьківського
+                        {getParentTitle(tasksTree, task.parentId)}
                     </span>
                 </div>
             </div>
@@ -148,15 +192,8 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
             </div>
 
             <div className="mt-auto pt-6 border-t border-gray-100 flex gap-3">
-                <EditButton
-                    className="flex-1"
-                    onClick={() => setIsEditingTask(true)}
-                />
-
-                <Button
-                    variant="primary"
-                    className="flex-1"
-                >
+                <EditButton className="flex-1" onClick={() => setIsEditingTask(true)} />
+                <Button variant="primary" className="flex-1">
                     Complete
                 </Button>
             </div>
