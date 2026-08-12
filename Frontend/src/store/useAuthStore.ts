@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { fetchGraphQL } from '../utils/api'; // <--- Імпортуємо наш клієнт
 
 interface User {
     id: number;
@@ -14,12 +15,10 @@ interface AuthStore {
     error: string | null;
     login: (email: string, password: string) => Promise<boolean>;
     register: (username: string, email: string, password: string) => Promise<boolean>;
-    updateProfile: (username: string, email: string, password: string) => Promise<boolean>; // <--- НОВА ФУНКЦІЯ
+    updateProfile: (username: string, email: string, password: string) => Promise<boolean>;
     logout: () => void;
     checkSession: () => void;
 }
-
-const GRAPHQL_URL = 'http://localhost:5000/graphql';
 
 const savedToken = localStorage.getItem('token');
 const savedUserStr = localStorage.getItem('user');
@@ -33,7 +32,8 @@ if (savedUserStr) {
     }
 }
 
-export const useAuthStore = create<AuthStore>((set, get) => ({
+// Прибрали (set, get), залишили тільки (set), бо токен тепер тягнеться автоматично в api.ts
+export const useAuthStore = create<AuthStore>((set) => ({
     user: initialUser,
     token: savedToken,
     isAuthenticated: !!(savedToken && initialUser),
@@ -51,16 +51,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
                     }
                 }
             `;
-            const response = await fetch(GRAPHQL_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query, variables: { input: { email, password } } }),
-            });
 
-            const result = await response.json();
-            if (result.errors) throw new Error(result.errors[0].message);
+            const data = await fetchGraphQL(query, { input: { email, password } });
+            const { token, user } = data.login;
 
-            const { token, user } = result.data.login;
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(user));
 
@@ -80,14 +74,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
                     createUser(input: $input) { id username email }
                 }
             `;
-            const response = await fetch(GRAPHQL_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query, variables: { input: { username, email, password } } }),
-            });
 
-            const result = await response.json();
-            if (result.errors) throw new Error(result.errors[0].message);
+            await fetchGraphQL(query, { input: { username, email, password } });
 
             set({ isLoading: false });
             return true;
@@ -97,31 +85,17 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         }
     },
 
-    // ==========================================
-    // НОВА ФУНКЦІЯ ОНОВЛЕННЯ ПРОФІЛЮ
-    // ==========================================
     updateProfile: async (username, email, password) => {
         set({ isLoading: true, error: null });
         try {
-            const token = get().token; // Дістаємо поточний токен зі стору
             const query = `
                 mutation UpdateUser($input: UpdateUserInput!) {
                     updateUser(input: $input) { id username email }
                 }
             `;
-            const response = await fetch(GRAPHQL_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` // <--- ОБОВ'ЯЗКОВО ДЛЯ [Authorize]
-                },
-                body: JSON.stringify({ query, variables: { input: { username, email, password } } }),
-            });
 
-            const result = await response.json();
-            if (result.errors) throw new Error(result.errors[0].message);
-
-            const updatedUser = result.data.updateUser;
+            const data = await fetchGraphQL(query, { input: { username, email, password } });
+            const updatedUser = data.updateUser;
 
             // Оновлюємо дані в пам'яті браузера
             localStorage.setItem('user', JSON.stringify(updatedUser));
