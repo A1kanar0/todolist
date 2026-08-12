@@ -38,6 +38,8 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
     const updateTask = useTaskStore((state) => state.updateTask);
     const deleteTask = useTaskStore((state) => state.deleteTask);
     const tasksTree = useTaskStore((state) => state.tasks);
+    // Додали діставання setSelectedTask зі стори:
+    const setSelectedTask = useTaskStore((state) => state.setSelectedTask);
 
     const [title, setTitle] = useState('');
     const [category, setCategory] = useState('');
@@ -64,15 +66,32 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
     }
 
     const handleSave = async () => {
+        const updatedDeadline = deadline ? new Date(deadline).toISOString() : null;
+
         const input = {
             id: Number(task.id),
             title,
             content,
             isCompleted: task.status === 'done',
-            deadline: deadline ? new Date(deadline).toISOString() : null,
+            deadline: updatedDeadline,
             parentId: parentId ? Number(parentId) : null,
         };
+
+        // 1. Запит на бек / оновлення в сторі
         await updateTask(input);
+
+        // 2. Оновлюємо по поточній вибраній таскі актуальні дані
+        setSelectedTask({
+            ...task,
+            title,
+            text: content,
+            category,
+            deadline: updatedDeadline || undefined,
+            parentId: parentId || null,
+        });
+
+        // 3. Закриваємо режим редагування
+        setIsEditingTask(false);
     };
 
     const handleDelete = async () => {
@@ -135,9 +154,9 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
                     </div>
                 </div>
 
-                {/* Поки що передаємо тільки defaultValue. Коли TextEditor буде готовий приймати onChange — додамо його сюди. */}
                 <TextEditor
-                    defaultValue={content}
+                    value={content}
+                    onChange={setContent}
                 />
 
                 <div className="mt-auto pt-4 border-t border-gray-100 flex justify-between items-center">
@@ -197,9 +216,14 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
 
             <div className="mb-6">
                 <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Опис</h4>
-                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                    {task.text}
-                </p>
+                {task.text ? (
+                    <div
+                        className="text-gray-700 leading-relaxed break-words prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: task.text }}
+                    />
+                ) : (
+                    <p className="text-gray-400 italic">Опис відсутній</p>
+                )}
             </div>
 
             <div className="mt-auto pt-6 border-t border-gray-100 flex gap-3">

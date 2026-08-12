@@ -14,6 +14,13 @@ const isDeadlineNearOrOverdue = (dateString?: string) => {
     return (deadlineDate - Date.now()) / (1000 * 60 * 60) < 24;
 };
 
+// Надійна функція для очищення тексту від HTML-тегів та спецсимволів
+const stripHtml = (html?: string) => {
+    if (!html) return '';
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.textContent || '';
+};
+
 export default function TaskItem({ task, depth = 0, hideChildren = false, onNavigate }: NestedTaskItemProps) {
     const [isOpen, setIsOpen] = useState(true);
     const hasChildren = task.children && task.children.length > 0;
@@ -70,7 +77,10 @@ export default function TaskItem({ task, depth = 0, hideChildren = false, onNavi
                 </div>
 
                 <div className="flex justify-between items-end mt-1 gap-4">
-                    <p className="text-gray-600 text-sm line-clamp-2">{task.text}</p>
+                    {/* Використовуємо надійну функцію замість регулярки */}
+                    <p className="text-gray-600 text-sm line-clamp-2">
+                        {stripHtml(task.text)}
+                    </p>
 
                     {task.deadline && (
                         <span className={`text-xs font-bold whitespace-nowrap ${
