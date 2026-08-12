@@ -28,6 +28,9 @@ const GET_NOTES_QUERY = `
       title
       content
       authorId
+      author {
+        username
+      }
       tags {
         name
         color
@@ -67,8 +70,8 @@ export const useNoteStore = create<NoteStore>((set) => ({
             const mappedNotes: NoteItem[] = result.data.notes.map((backendNote: any) => ({
                 id: backendNote.id,
                 title: backendNote.title,
-                text: backendNote.content, // Перекидаємо content у text
-                author: `Author ID: ${backendNote.authorId}`, // Тимчасова заглушка, бо імені поки немає
+                text: backendNote.content,
+                author: backendNote.author?.username || 'Невідомий',
                 tags: backendNote.tags || []
             }));
 
