@@ -39,6 +39,7 @@ export default function Notes() {
                                 text={note.text}
                                 author={note.author}
                                 tags={note.tags}
+                                variant="grid"
                                 isSelected={selectedNote?.id === note.id}
                                 onClick={() => setSelectedNote(note)}
                             />
