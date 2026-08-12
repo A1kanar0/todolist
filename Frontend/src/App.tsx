@@ -11,6 +11,7 @@ import Auth from './pages/Auth'; // Наша нова сторінка логі�
 
 // Модалки та захист
 import CreateTaskModal from './components/tasks/CreateTaskModal';
+import CreateNoteModal from './components/notes/CreateNoteModal';
 import SettingsModal from './components/layout/SettingsModal';
 import ProtectedAdminRoute from './components/layout/ProtectedAdminRoute';
 
@@ -48,6 +49,7 @@ const AppLayout = () => {
 
             {/* Глобальні модальні вікна (доступні тільки всередині додатку) */}
             <CreateTaskModal />
+            <CreateNoteModal/>
             <SettingsModal />
         </div>
     );
