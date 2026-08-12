@@ -1,46 +1,84 @@
 import { create } from 'zustand';
-// Зміни шлях імпорту на той, де лежить твій інтерфейс NoteItem
 import type { NoteItem } from '../components/notes/NoteDetails';
 
 interface NoteStore {
+    notes: NoteItem[];
+    isLoading: boolean;
+    error: string | null;
     selectedNote: NoteItem | null;
-    setSelectedNote: (note: NoteItem | null) => void;
-
     isCreateModalOpen: boolean;
+    isEditingNote: boolean;
+    isSettingsModalOpen: boolean;
+    theme: 'light' | 'dark' | 'system';
+    fetchNotes: () => Promise<void>;
+    setSelectedNote: (note: NoteItem | null) => void;
     openCreateModal: () => void;
     closeCreateModal: () => void;
-
-    isEditingNote: boolean;
     setIsEditingNote: (isEditing: boolean) => void;
-
-    // Стан для налаштувань
-    isSettingsModalOpen: boolean;
     openSettingsModal: () => void;
     closeSettingsModal: () => void;
-
-    // Стан для теми
-    theme: 'light' | 'dark' | 'system';
     setTheme: (theme: 'light' | 'dark' | 'system') => void;
 }
 
-export const useNoteStore = create<NoteStore>((set) => ({
-    // Дефолтні значення та екшени для нотаток
-    selectedNote: null,
-    setSelectedNote: (note) => set({ selectedNote: note, isEditingNote: false }),
+// 1. ОНОВЛЕНИЙ ЗАПИТ (відповідає C# класу Note)
+const GET_NOTES_QUERY = `
+  query {
+    notes {
+      id
+      title
+      content
+      authorId
+    }
+  }
+`;
 
+export const useNoteStore = create<NoteStore>((set) => ({
+    notes: [],
+    isLoading: false,
+    error: null,
+    selectedNote: null,
     isCreateModalOpen: false,
+    isEditingNote: false,
+    isSettingsModalOpen: false,
+    theme: 'light',
+
+    fetchNotes: async () => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await fetch('http://localhost:5000/graphql', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ query: GET_NOTES_QUERY }),
+            });
+
+            const result = await response.json();
+
+            if (result.errors) {
+                throw new Error(result.errors[0].message);
+            }
+
+            // 2. МАПІНГ ДАНИХ (Перетворюємо C# поля на ті, що чекає UI)
+            const mappedNotes: NoteItem[] = result.data.notes.map((backendNote: any) => ({
+                id: backendNote.id,
+                text: backendNote.content, // Перекидаємо content у text
+                author: `Author ID: ${backendNote.authorId}`, // Тимчасова заглушка, бо імені поки немає
+                tags: [] // Порожній масив тегів, щоб .map() у компонентах не крашився
+            }));
+
+            set({ notes: mappedNotes, isLoading: false });
+        } catch (error: any) {
+            console.error(error);
+            set({ error: error.message, isLoading: false });
+        }
+    },
+
+    setSelectedNote: (note) => set({ selectedNote: note, isEditingNote: false }),
     openCreateModal: () => set({ isCreateModalOpen: true }),
     closeCreateModal: () => set({ isCreateModalOpen: false }),
-
-    isEditingNote: false,
     setIsEditingNote: (isEditing) => set({ isEditingNote: isEditing }),
-
-    // Екшени для налаштувань
-    isSettingsModalOpen: false,
     openSettingsModal: () => set({ isSettingsModalOpen: true }),
     closeSettingsModal: () => set({ isSettingsModalOpen: false }),
-
-    // Тема
-    theme: 'light',
     setTheme: (theme) => set({ theme }),
 }));
