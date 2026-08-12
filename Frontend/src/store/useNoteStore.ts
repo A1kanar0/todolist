@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { NoteItem } from '../components/notes/NoteDetails';
+import { fetchGraphQL } from '../utils/api';
 
 interface NoteStore {
     notes: NoteItem[];
@@ -20,7 +21,7 @@ interface NoteStore {
     setTheme: (theme: 'light' | 'dark' | 'system') => void;
 }
 
-// 1. ОНОВЛЕНИЙ ЗАПИТ (відповідає C# класу Note)
+// ЗАПИТ
 const GET_NOTES_QUERY = `
   query {
     notes {
@@ -49,26 +50,15 @@ export const useNoteStore = create<NoteStore>((set) => ({
     fetchNotes: async () => {
         set({ isLoading: true, error: null });
         try {
-            const response = await fetch('http://localhost:5000/graphql', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ query: GET_NOTES_QUERY }),
-            });
-
-            const result = await response.json();
-
-            if (result.errors) {
-                throw new Error(result.errors[0].message);
-            }
+            // 1. Використовуємо функцію-обгортку (токен додасться автоматично)
+            const data = await fetchGraphQL(GET_NOTES_QUERY);
 
             // 2. МАПІНГ ДАНИХ (Перетворюємо C# поля на ті, що чекає UI)
-            const mappedNotes: NoteItem[] = result.data.notes.map((backendNote: any) => ({
+            const mappedNotes: NoteItem[] = data.notes.map((backendNote: any) => ({
                 id: backendNote.id,
                 title: backendNote.title,
-                text: backendNote.content, // Перекидаємо content у text
-                author: `Author ID: ${backendNote.authorId}`, // Тимчасова заглушка, бо імені поки немає
+                text: backendNote.content,
+                author: `Author ID: ${backendNote.authorId}`,
                 tags: backendNote.tags || []
             }));
 
