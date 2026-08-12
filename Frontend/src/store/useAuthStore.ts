@@ -10,6 +10,7 @@ interface User {
 interface AuthStore {
     user: User | null;
     token: string | null;
+    userRole: 'admin' | 'user';
     isAuthenticated: boolean;
     isLoading: boolean;
     error: string | null;
@@ -36,6 +37,7 @@ if (savedUserStr) {
 export const useAuthStore = create<AuthStore>((set) => ({
     user: initialUser,
     token: savedToken,
+    userRole: 'admin',
     isAuthenticated: !!(savedToken && initialUser),
     isLoading: false,
     error: null,
