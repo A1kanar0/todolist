@@ -18,6 +18,17 @@ Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000") // Вкажи точну адресу твого фронтенду
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // Обов'язково, бо ти юзаєш куки для JWT!
+    });
+});
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // DBUP migrations
@@ -75,7 +86,7 @@ builder.Services
     .AddType<CategoryType>()
     .AddType<TagType>()
     .AddType<TaskItemType>()
-    .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = builder.Environment.IsDevelopment()) // УБРАТЬ НАХУЙ З ПРОДА
+    .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true) // УБРАТЬ НАХУЙ З ПРОДА
     .AddAuthorization();
     
 
@@ -140,6 +151,7 @@ builder.Services.AddScoped<ITaskImageService, TaskImageService>();
 builder.Services.AddScoped<IFileService, FileService>();
 
 var app = builder.Build();
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseStaticFiles();
