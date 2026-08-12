@@ -14,7 +14,6 @@ const isDeadlineNearOrOverdue = (dateString?: string) => {
     return (deadlineDate - Date.now()) / (1000 * 60 * 60) < 24;
 };
 
-// Надійна функція для очищення тексту від HTML-тегів та спецсимволів
 const stripHtml = (html?: string) => {
     if (!html) return '';
     const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -27,7 +26,16 @@ export default function TaskItem({ task, depth = 0, hideChildren = false, onNavi
 
     const setSelectedTask = useTaskStore((state) => state.setSelectedTask);
     const selectedTask = useTaskStore((state) => state.selectedTask);
+
+    const categories = useTaskStore((state) => state.categories);
+    const users = useTaskStore((state) => state.users);
+
     const isSelected = selectedTask?.id === task.id;
+
+    const categoryName = categories.find(c => String(c.id) === String(task.categoryId))?.name;
+
+    // Дістаємо ВСІХ виконавців для цієї таски
+    const executorUsers = users.filter(u => task.executorIds?.includes(String(u.id)));
 
     const statusColors = {
         'todo': 'bg-gray-200 text-gray-700',
@@ -46,12 +54,13 @@ export default function TaskItem({ task, depth = 0, hideChildren = false, onNavi
                     isSelected ? 'bg-purple-50/50 border-2 border-[#A890F0]' : 'bg-white border-gray-200 hover:border-[#A890F0]'
                 }`}
             >
-                <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-2">
+                <div className="flex justify-between items-start mb-2 gap-4">
+                    {/* Ліва частина - Назва завдання */}
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
                         {hasChildren && !hideChildren && (
                             <button
                                 onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
-                                className="p-1 -ml-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
+                                className="p-1 -ml-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors shrink-0"
                                 title={isOpen ? "Згорнути" : "Розгорнути"}
                             >
                                 <svg className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,31 +68,43 @@ export default function TaskItem({ task, depth = 0, hideChildren = false, onNavi
                                 </svg>
                             </button>
                         )}
-                        <span className={`font-bold transition-colors ${!hasChildren || hideChildren ? 'ml-6' : ''} ${
+                        <span className={`font-bold transition-colors truncate ${!hasChildren || hideChildren ? 'ml-6' : ''} ${
                             isSelected ? 'text-[#A890F0]' : 'text-gray-900 group-hover:text-[#7E69AB]'
-                        }`}>
+                        }`} title={task.title}>
                             {task.title}
                         </span>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        {task.category && (
-                            <span className="text-gray-500 text-sm italic">{task.category}</span>
+                    {/* Права частина - Бейджі */}
+                    <div className="flex items-center gap-2 shrink-0 max-w-[60%] justify-end">
+                        {categoryName && (
+                            <span className="text-gray-500 text-xs border border-gray-200 px-1.5 py-0.5 rounded-md flex items-center gap-1 truncate max-w-[120px]">
+                                <span className="shrink-0">📁</span>
+                                <span className="truncate">{categoryName}</span>
+                            </span>
                         )}
-                        <span className={`px-2 py-0.5 rounded text-xs font-semibold ${statusColors[task.status]}`}>
+                        {executorUsers.length > 0 && (
+                            <span
+                                className="text-gray-500 text-xs border border-gray-200 px-1.5 py-0.5 rounded-md flex items-center gap-1 truncate max-w-[150px]"
+                                title={executorUsers.map(u => u.username).join(', ')}
+                            >
+                                <span className="shrink-0">👤</span>
+                                <span className="truncate">{executorUsers.map(u => u.username).join(', ')}</span>
+                            </span>
+                        )}
+                        <span className={`px-2 py-0.5 rounded text-xs font-semibold shrink-0 ${statusColors[task.status]}`}>
                             {task.status}
                         </span>
                     </div>
                 </div>
 
                 <div className="flex justify-between items-end mt-1 gap-4">
-                    {/* Використовуємо надійну функцію замість регулярки */}
                     <p className="text-gray-600 text-sm line-clamp-2">
                         {stripHtml(task.text)}
                     </p>
 
                     {task.deadline && (
-                        <span className={`text-xs font-bold whitespace-nowrap ${
+                        <span className={`text-xs font-bold whitespace-nowrap shrink-0 ${
                             isDeadlineNearOrOverdue(task.deadline) ? 'text-red-500' : 'text-gray-400'
                         }`}>
                             {new Date(task.deadline).toLocaleDateString('uk-UA', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}

@@ -1,5 +1,16 @@
 import { create } from 'zustand';
 
+export interface UserNode {
+    id: string;
+    username: string;
+    email: string;
+}
+
+export interface CategoryNode {
+    id: string;
+    name: string;
+}
+
 export interface TaskNode {
     id: string;
     title: string;
@@ -7,21 +18,54 @@ export interface TaskNode {
     status: 'todo' | 'in-progress' | 'done';
     children?: TaskNode[];
     deadline?: string;
-    category?: string;
-    categoryId?: string;
+    categoryId?: string | null;
+    executorIds?: string[];
     parentId?: string | null;
 }
 
+export interface CreateTaskInput {
+    title: string;
+    content: string;
+    deadline?: string | null;
+    categoryId?: number | null;
+    parentId?: number | null;
+    executorIds?: number[] | null;
+}
+
+export interface UpdateTaskInput {
+    id: number;
+    title: string;
+    content: string;
+    isCompleted: boolean;
+    deadline?: string | null;
+    categoryId?: number | null;
+    parentId?: number | null;
+    executorIds?: number[] | null;
+}
+
+interface FlatTask {
+    id: string | number;
+    title: string;
+    content?: string;
+    isCompleted: boolean;
+    categoryId?: string | number | null;
+    parentId?: string | number | null;
+    deadline?: string;
+    executors?: { id: string | number }[] | null;
+}
+
 interface TaskStore {
-    // Дані завдань
     tasks: TaskNode[];
+    users: UserNode[];
+    categories: CategoryNode[];
     isLoading: boolean;
     error: string | null;
-    fetchTasks: () => Promise<void>;
-    updateTask: (input: any) => Promise<void>;
-    deleteTask: (id: number) => Promise<void>;
 
-    // UI Стани
+    fetchTasks: () => Promise<void>;
+    updateTask: (input: UpdateTaskInput) => Promise<void>;
+    deleteTask: (id: number) => Promise<void>;
+    createTask: (input: CreateTaskInput) => Promise<boolean>;
+
     selectedTask: TaskNode | null;
     setSelectedTask: (task: TaskNode | null) => void;
     isCreateModalOpen: boolean;
@@ -36,18 +80,30 @@ interface TaskStore {
     setTheme: (theme: 'light' | 'dark' | 'system') => void;
 }
 
-const GET_TASKS_QUERY = `
-  query {
+const GET_TASKS_AND_LOOKUPS_QUERY = `
+  query GetTasksAndLookups {
     tasks {
       id title content isCompleted deadline categoryId parentId
+      executors {
+        id
+      }
+    }
+    categories {
+      id name
+    }
+    users {
+      id username email
     }
   }
 `;
 
 const UPDATE_TASK_MUTATION = `
   mutation UpdateTask($input: UpdateTaskInput!) {
-    updateTask(input: $input) {
-      id parentId
+    updateTask(input: $input) { 
+      id title content isCompleted deadline categoryId parentId
+      executors {
+        id
+      }
     }
   }
 `;
@@ -58,7 +114,18 @@ const DELETE_TASK_MUTATION = `
   }
 `;
 
-const buildTaskTree = (flatTasks: any[]): TaskNode[] => {
+const CREATE_TASK_MUTATION = `
+  mutation CreateTask($input: CreateTaskInput!) {
+    createTask(input: $input) { 
+      id title content isCompleted deadline categoryId parentId
+      executors {
+        id
+      }
+    }
+  }
+`;
+
+const buildTaskTree = (flatTasks: FlatTask[]): TaskNode[] => {
     if (!Array.isArray(flatTasks)) return [];
 
     const taskMap = new Map<string, TaskNode>();
@@ -72,9 +139,10 @@ const buildTaskTree = (flatTasks: any[]): TaskNode[] => {
             title: task.title || 'Без назви',
             text: task.content || '',
             status: task.isCompleted ? 'done' : 'todo',
-            categoryId: task.categoryId ? task.categoryId.toString() : undefined,
+            categoryId: task.categoryId ? task.categoryId.toString() : null,
             parentId: task.parentId ? task.parentId.toString() : null,
             deadline: task.deadline ? task.deadline : undefined,
+            executorIds: task.executors ? task.executors.map(e => e.id.toString()) : [],
             children: []
         });
     });
@@ -103,6 +171,8 @@ const buildTaskTree = (flatTasks: any[]): TaskNode[] => {
 
 export const useTaskStore = create<TaskStore>((set) => ({
     tasks: [],
+    users: [],
+    categories: [],
     isLoading: false,
     error: null,
 
@@ -113,39 +183,106 @@ export const useTaskStore = create<TaskStore>((set) => ({
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ query: GET_TASKS_QUERY }),
+                body: JSON.stringify({ query: GET_TASKS_AND_LOOKUPS_QUERY }),
             });
             const result = await response.json();
-            if (result.errors) throw new Error(result.errors[0].message);
 
-            const tasksTree = buildTaskTree(result.data.tasks);
-            set({ tasks: tasksTree, isLoading: false });
-        } catch (error: any) {
-            console.error('Помилка завантаження:', error);
-            set({ error: error.message, isLoading: false });
+            if (result.errors) {
+                throw new Error(result.errors[0].message);
+            }
+
+            const tasksTree = buildTaskTree(result.data.tasks || []);
+            set({
+                tasks: tasksTree,
+                categories: result.data.categories || [],
+                users: result.data.users || [],
+                isLoading: false
+            });
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Помилка завантаження';
+            console.error('Помилка завантаження:', errorMessage);
+            set({ error: errorMessage, isLoading: false });
+        }
+    },
+
+    createTask: async (input) => {
+        set({ isLoading: true, error: null });
+        try {
+            const payload = {
+                ...input,
+                content: stringHasValue(input.content) ? input.content : ' '
+            };
+
+            const response = await fetch('http://localhost:5148/graphql/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    query: CREATE_TASK_MUTATION,
+                    variables: { input: payload }
+                }),
+            });
+            const result = await response.json();
+
+            if (result.errors) {
+                alert(`Помилка бекенду: ${result.errors[0].message}`);
+                throw new Error(result.errors[0].message);
+            }
+
+            await useTaskStore.getState().fetchTasks();
+
+            const createdData = result.data.createTask;
+            const newTask: TaskNode = {
+                id: createdData.id.toString(),
+                title: createdData.title || 'Нове завдання',
+                text: createdData.content || '',
+                status: createdData.isCompleted ? 'done' : 'todo',
+                categoryId: createdData.categoryId ? createdData.categoryId.toString() : null,
+                parentId: createdData.parentId ? createdData.parentId.toString() : null,
+                deadline: createdData.deadline ? createdData.deadline : undefined,
+                executorIds: createdData.executors ? createdData.executors.map((e: { id: string | number }) => e.id.toString()) : [],
+            };
+
+            set({ selectedTask: newTask, isCreateModalOpen: false, isLoading: false, isEditingTask: false });
+            return true;
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Помилка створення';
+            console.error('Помилка створення:', errorMessage);
+            set({ error: errorMessage, isLoading: false });
+            return false;
         }
     },
 
     updateTask: async (input) => {
         set({ isLoading: true, error: null });
         try {
+            const payload = {
+                ...input,
+                content: stringHasValue(input.content) ? input.content : ' '
+            };
+
             const response = await fetch('http://localhost:5148/graphql/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
                 body: JSON.stringify({
                     query: UPDATE_TASK_MUTATION,
-                    variables: { input }
+                    variables: { input: payload }
                 }),
             });
             const result = await response.json();
-            if (result.errors) throw new Error(result.errors[0].message);
+
+            if (result.errors) {
+                alert(`Помилка бекенду: ${result.errors[0].message}`);
+                throw new Error(result.errors[0].message);
+            }
 
             await useTaskStore.getState().fetchTasks();
             set({ isEditingTask: false });
-        } catch (error: any) {
-            console.error('Помилка оновлення:', error);
-            set({ error: error.message, isLoading: false });
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Помилка оновлення';
+            console.error('Помилка оновлення:', errorMessage);
+            set({ error: errorMessage, isLoading: false });
         }
     },
 
@@ -164,7 +301,6 @@ export const useTaskStore = create<TaskStore>((set) => ({
             const result = await response.json();
             if (result.errors) throw new Error(result.errors[0].message);
 
-            // Якщо була вибрана ця ж таска — скидаємо вибір та закриваємо панель
             const currentSelected = useTaskStore.getState().selectedTask;
             if (currentSelected && Number(currentSelected.id) === id) {
                 set({ selectedTask: null, isEditingTask: false });
@@ -173,9 +309,10 @@ export const useTaskStore = create<TaskStore>((set) => ({
             }
 
             await useTaskStore.getState().fetchTasks();
-        } catch (error: any) {
-            console.error('Помилка видалення:', error);
-            set({ error: error.message, isLoading: false });
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Помилка видалення';
+            console.error('Помилка видалення:', errorMessage);
+            set({ error: errorMessage, isLoading: false });
         }
     },
 
@@ -192,3 +329,7 @@ export const useTaskStore = create<TaskStore>((set) => ({
     theme: 'light',
     setTheme: (theme) => set({ theme }),
 }));
+
+function stringHasValue(str?: string): boolean {
+    return Boolean(str && str.trim().length > 0);
+}

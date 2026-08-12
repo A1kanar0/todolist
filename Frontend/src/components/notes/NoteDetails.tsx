@@ -1,9 +1,9 @@
+import { useState } from 'react';
 import { useNoteStore } from '../../store/useNoteStore';
 import Button from '../ui/Button';
 import EditButton from '../ui/EditButton';
 import TextEditor from '../ui/TextEditor';
 
-// Типізація для нотатки (можеш винести в окремий файл types.ts)
 export interface NoteItem {
     id: number | string;
     title: string;
@@ -17,9 +17,20 @@ interface NoteDetailsProps {
 }
 
 export default function NoteDetails({ note }: NoteDetailsProps) {
-    // Беремо стан редагування зі стору (аналогічно до тасок)
     const isEditingNote = useNoteStore((state) => state.isEditingNote);
     const setIsEditingNote = useNoteStore((state) => state.setIsEditingNote);
+
+    // Стейт для редагування
+    const [prevNoteId, setPrevNoteId] = useState(note?.id);
+    const [title, setTitle] = useState(note?.title || '');
+    const [content, setContent] = useState(note?.text || '');
+
+    // Синхронізація стейту під час зміни обраної нотатки
+    if (note && note.id !== prevNoteId) {
+        setPrevNoteId(note.id);
+        setTitle(note.title || '');
+        setContent(note.text || '');
+    }
 
     if (!note) {
         return (
@@ -35,19 +46,20 @@ export default function NoteDetails({ note }: NoteDetailsProps) {
     if (isEditingNote) {
         return (
             <div className="flex-1 flex flex-col bg-white rounded-xl p-5 border border-gray-200 shadow-sm overflow-hidden min-h-[400px]">
-                {/* Інформаційний заголовок та інпут для назви */}
+                {/* Заголовок та інпут назви */}
                 <div className="mb-4">
                     <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Редагування нотатки</span>
                     <input
                         type="text"
-                        defaultValue={note.title}
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
                         className="w-full text-2xl font-bold text-gray-900 bg-gray-50 p-3 rounded-lg outline-none focus:ring-2 focus:ring-[#A890F0] transition-all"
                         placeholder="Назва нотатки..."
                     />
                 </div>
 
-                {/* Використовуємо наш новий ізольований компонент редактора */}
-                <TextEditor defaultValue={note.text} />
+                {/* Редактор тексту з правильними пропсами */}
+                <TextEditor value={content} onChange={setContent} />
 
                 {/* Кнопки збереження */}
                 <div className="mt-auto pt-4 border-t border-gray-100 flex justify-end gap-3">
@@ -61,7 +73,8 @@ export default function NoteDetails({ note }: NoteDetailsProps) {
                     <Button
                         variant="primary"
                         onClick={() => {
-                            alert('Тут ми будемо збирати JSON з редактора та зберігати нотатку на бекенді!');
+                            // Тут надалі буде виклик оновлення в сторі: updateNote({ id: note.id, title, text: content })
+                            alert(`Зберігаємо:\nЗаголовок: ${title}\nТекст: ${content}`);
                             setIsEditingNote(false);
                         }}
                     >
@@ -77,7 +90,6 @@ export default function NoteDetails({ note }: NoteDetailsProps) {
     // ==========================================
     return (
         <div className="flex-1 flex flex-col bg-white rounded-xl p-6 shadow-sm border border-gray-200 overflow-y-auto custom-scrollbar">
-
             {/* Назва нотатки */}
             <div className="mb-4">
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">{note.title}</h3>
@@ -92,12 +104,17 @@ export default function NoteDetails({ note }: NoteDetailsProps) {
                 ))}
             </div>
 
-            {/* Повний текст нотатки */}
+            {/* Повний текст нотатки (підтримка HTML від TextEditor) */}
             <div className="mb-6">
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Опис</span>
-                <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
-                    {note.text}
-                </p>
+                {note.text && note.text.trim() ? (
+                    <div
+                        className="text-gray-700 text-sm leading-relaxed prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: note.text }}
+                    />
+                ) : (
+                    <p className="text-gray-400 italic text-sm">Опис відсутній</p>
+                )}
             </div>
 
             {/* Автор */}
