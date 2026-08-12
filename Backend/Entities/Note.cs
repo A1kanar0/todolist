@@ -9,5 +9,4 @@ public class Note
     public DateTime CreatedAt { get; set; }
 
     public ICollection<NoteImage> Images { get; set; } = new List<NoteImage>();
-    public ICollection<Tag> Tags { get; set; } = new List<Tag>();
 }
