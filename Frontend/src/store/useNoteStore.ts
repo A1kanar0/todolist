@@ -23,6 +23,7 @@ interface NoteStore {
     fetchTags: () => Promise<void>;
     createTag: (name: string, color: string) => Promise<TagItem | null>;
     createNote: (title: string, content: string, tagIds: number[]) => Promise<boolean>;
+    deleteNote: (id: number) => Promise<boolean>;
 
     setSelectedNote: (note: NoteItem | null) => void;
     openCreateModal: () => void;
@@ -60,6 +61,12 @@ const CREATE_TAG_MUTATION = `
 const CREATE_NOTE_MUTATION = `
   mutation CreateNote($input: CreateNoteInput!) {
     createNote(input: $input) { id }
+  }
+`;
+
+const DELETE_NOTE_MUTATION = `
+  mutation DeleteNote($id: Int!) {
+    deleteNote(id: $id)
   }
 `;
 // ------------------------------------------
@@ -126,6 +133,21 @@ export const useNoteStore = create<NoteStore>((set, get) => ({
             // Після успішного створення — оновлюємо список нотаток
             await get().fetchNotes();
             set({ isLoading: false });
+            return true;
+        } catch (error: any) {
+            set({ error: error.message, isLoading: false });
+            return false;
+        }
+    },
+
+    deleteNote: async (id: number) => {
+        set({ isLoading: true, error: null });
+        try {
+            await fetchGraphQL(DELETE_NOTE_MUTATION, { id });
+
+            // Оновлюємо список нотаток і закриваємо деталі/редагування
+            await get().fetchNotes();
+            set({ selectedNote: null, isEditingNote: false, isLoading: false });
             return true;
         } catch (error: any) {
             set({ error: error.message, isLoading: false });
