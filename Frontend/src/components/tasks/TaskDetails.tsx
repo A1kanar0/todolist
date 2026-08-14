@@ -126,6 +126,30 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
         }
     };
 
+    // ВИКОРИСТОВУЄМО ТІЛЬКИ updateTask ДЛЯ ЗМІНИ СТАТУСУ
+    const handleCompleteTask = async () => {
+        const isCompleting = task.status !== 'done';
+
+        const input = {
+            id: Number(task.id),
+            title: task.title,
+            content: task.text || ' ',
+            isCompleted: isCompleting, // Перемикаємо статус
+            categoryId: task.categoryId ? Number(task.categoryId) : null,
+            parentId: task.parentId ? Number(task.parentId) : null,
+            deadline: task.deadline ? new Date(task.deadline).toISOString() : null,
+            executorIds: task.executorIds ? task.executorIds.map(Number) : [],
+        };
+
+        await updateTask(input);
+
+        // Оновлюємо стейт, щоб кнопка одразу змінилася
+        setSelectedTask({
+            ...task,
+            status: isCompleting ? 'done' : 'todo'
+        });
+    };
+
     if (isEditingTask) {
         return (
             <div className="flex-1 flex flex-col bg-white rounded-xl p-5 border border-gray-200 shadow-sm overflow-hidden overflow-y-auto custom-scrollbar">
@@ -204,6 +228,8 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
         );
     }
 
+    const isCompleteBlocked = task.hasUncompletedChildren && task.status !== 'done';
+
     return (
         <div className="flex-1 flex flex-col bg-white rounded-xl p-5 border border-gray-200 shadow-sm overflow-y-auto custom-scrollbar">
             <h3 className="text-2xl font-bold text-gray-900 mb-2">{task.title}</h3>
@@ -239,19 +265,14 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
             </div>
             <div className="mt-auto pt-6 border-t border-gray-100 flex gap-3">
                 <EditButton className="flex-1" onClick={() => setIsEditingTask(true)} />
-                {/* ОНОВЛЕНА КНОПКА ВИКОНАННЯ */}
                 <Button
-                    variant="primary"
-                    className={`flex-1 ${task.hasUncompletedChildren ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
-                    disabled={task.hasUncompletedChildren}
-                    onClick={() => {
-                        if (!task.hasUncompletedChildren) {
-                            alert('Логіка виконання (в розробці)');
-                        }
-                    }}
-                    title={task.hasUncompletedChildren ? 'Спочатку виконайте всі підзавдання' : 'Виконати завдання'}
+                    variant={task.status === 'done' ? 'secondary' : 'primary'}
+                    disabled={isCompleteBlocked}
+                    onClick={handleCompleteTask}
+                    title={isCompleteBlocked ? 'Спочатку виконайте всі підзавдання' : 'Змінити статус завдання'}
+                    className="flex-1"
                 >
-                    Complete
+                    {task.status === 'done' ? 'Відновити' : 'Виконати'}
                 </Button>
             </div>
         </div>
