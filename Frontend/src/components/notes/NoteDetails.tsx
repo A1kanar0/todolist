@@ -1,9 +1,9 @@
+import { useState, useEffect } from 'react';
 import { useNoteStore } from '../../store/useNoteStore';
 import Button from '../ui/Button';
 import EditButton from '../ui/EditButton';
 import TextEditor from '../ui/TextEditor';
 
-// Типізація для нотатки (можеш винести в окремий файл types.ts)
 export interface NoteItem {
     id: number | string;
     title: string;
@@ -17,9 +17,22 @@ interface NoteDetailsProps {
 }
 
 export default function NoteDetails({ note }: NoteDetailsProps) {
-    // Беремо стан редагування зі стору (аналогічно до тасок)
     const isEditingNote = useNoteStore((state) => state.isEditingNote);
     const setIsEditingNote = useNoteStore((state) => state.setIsEditingNote);
+    const deleteNote = useNoteStore((state) => state.deleteNote);
+    const isLoading = useNoteStore((state) => state.isLoading);
+
+    // Локальний стейт для редагування полів нотатки
+    const [title, setTitle] = useState(note?.title || '');
+    const [content, setContent] = useState(note?.text || '');
+
+    // Оновлюємо локальний стейт, коли змінюється вибрана нотатка
+    useEffect(() => {
+        if (note) {
+            setTitle(note.title);
+            setContent(note.text);
+        }
+    }, [note]);
 
     if (!note) {
         return (
@@ -35,21 +48,22 @@ export default function NoteDetails({ note }: NoteDetailsProps) {
     if (isEditingNote) {
         return (
             <div className="flex-1 flex flex-col bg-white rounded-xl p-5 border border-gray-200 shadow-sm overflow-hidden min-h-[400px]">
-                {/* Інформаційний заголовок та інпут для назви */}
                 <div className="mb-4">
                     <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Редагування нотатки</span>
                     <input
                         type="text"
-                        defaultValue={note.title}
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
                         className="w-full text-2xl font-bold text-gray-900 bg-gray-50 p-3 rounded-lg outline-none focus:ring-2 focus:ring-[#A890F0] transition-all"
                         placeholder="Назва нотатки..."
                     />
                 </div>
 
-                {/* Використовуємо наш новий ізольований компонент редактора */}
-                <TextEditor defaultValue={note.text} />
+                <TextEditor
+                    defaultValue={content}
+                    // Якщо у твого TextEditor є onChange або подібний пропс для збору тексту, підключи його сюди
+                />
 
-                {/* Кнопки збереження */}
                 <div className="mt-auto pt-4 border-t border-gray-100 flex justify-end gap-3">
                     <Button
                         variant="secondary"
@@ -60,12 +74,13 @@ export default function NoteDetails({ note }: NoteDetailsProps) {
 
                     <Button
                         variant="primary"
+                        disabled={isLoading}
                         onClick={() => {
-                            alert('Тут ми будемо збирати JSON з редактора та зберігати нотатку на бекенді!');
+                            alert('Тут ми підключимо збереження оновленої нотатки на бекенд!');
                             setIsEditingNote(false);
                         }}
                     >
-                        Save Changes
+                        {isLoading ? 'Збереження...' : 'Save Changes'}
                     </Button>
                 </div>
             </div>
@@ -114,10 +129,15 @@ export default function NoteDetails({ note }: NoteDetailsProps) {
                 />
 
                 <button
-                    className="flex-1 py-2.5 bg-[#FF6B6B] hover:bg-[#FF5252] text-white font-bold text-sm rounded-xl transition-colors"
-                    onClick={() => alert('Тут буде логіка видалення')}
+                    className="flex-1 py-2.5 bg-[#FF6B6B] hover:bg-[#FF5252] text-white font-bold text-sm rounded-xl transition-colors disabled:opacity-50"
+                    disabled={isLoading}
+                    onClick={async () => {
+                        if (window.confirm('Ви впевнені, що хочете видалити цю нотатку?')) {
+                            await deleteNote(Number(note.id));
+                        }
+                    }}
                 >
-                    Delete
+                    {isLoading ? 'Видалення...' : 'Delete'}
                 </button>
             </div>
         </div>
