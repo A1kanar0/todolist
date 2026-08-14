@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNoteStore } from '../../store/useNoteStore';
 import Button from '../ui/Button';
 import EditButton from '../ui/EditButton';
@@ -19,6 +19,20 @@ interface NoteDetailsProps {
 export default function NoteDetails({ note }: NoteDetailsProps) {
     const isEditingNote = useNoteStore((state) => state.isEditingNote);
     const setIsEditingNote = useNoteStore((state) => state.setIsEditingNote);
+    const deleteNote = useNoteStore((state) => state.deleteNote);
+    const isLoading = useNoteStore((state) => state.isLoading);
+
+    // Локальний стейт для редагування полів нотатки
+    const [title, setTitle] = useState(note?.title || '');
+    const [content, setContent] = useState(note?.text || '');
+
+    // Оновлюємо локальний стейт, коли змінюється вибрана нотатка
+    useEffect(() => {
+        if (note) {
+            setTitle(note.title);
+            setContent(note.text);
+        }
+    }, [note]);
 
     // Стейт для редагування
     const [prevNoteId, setPrevNoteId] = useState(note?.id);
@@ -46,7 +60,6 @@ export default function NoteDetails({ note }: NoteDetailsProps) {
     if (isEditingNote) {
         return (
             <div className="flex-1 flex flex-col bg-white rounded-xl p-5 border border-gray-200 shadow-sm overflow-hidden min-h-[400px]">
-                {/* Заголовок та інпут назви */}
                 <div className="mb-4">
                     <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Редагування нотатки</span>
                     <input
@@ -58,10 +71,11 @@ export default function NoteDetails({ note }: NoteDetailsProps) {
                     />
                 </div>
 
-                {/* Редактор тексту з правильними пропсами */}
-                <TextEditor value={content} onChange={setContent} />
+                <TextEditor
+                    defaultValue={content}
+                    // Якщо у твого TextEditor є onChange або подібний пропс для збору тексту, підключи його сюди
+                />
 
-                {/* Кнопки збереження */}
                 <div className="mt-auto pt-4 border-t border-gray-100 flex justify-end gap-3">
                     <Button
                         variant="secondary"
@@ -72,13 +86,13 @@ export default function NoteDetails({ note }: NoteDetailsProps) {
 
                     <Button
                         variant="primary"
+                        disabled={isLoading}
                         onClick={() => {
-                            // Тут надалі буде виклик оновлення в сторі: updateNote({ id: note.id, title, text: content })
-                            alert(`Зберігаємо:\nЗаголовок: ${title}\nТекст: ${content}`);
+                            alert('Тут ми підключимо збереження оновленої нотатки на бекенд!');
                             setIsEditingNote(false);
                         }}
                     >
-                        Save Changes
+                        {isLoading ? 'Збереження...' : 'Save Changes'}
                     </Button>
                 </div>
             </div>
@@ -131,10 +145,15 @@ export default function NoteDetails({ note }: NoteDetailsProps) {
                 />
 
                 <button
-                    className="flex-1 py-2.5 bg-[#FF6B6B] hover:bg-[#FF5252] text-white font-bold text-sm rounded-xl transition-colors"
-                    onClick={() => alert('Тут буде логіка видалення')}
+                    className="flex-1 py-2.5 bg-[#FF6B6B] hover:bg-[#FF5252] text-white font-bold text-sm rounded-xl transition-colors disabled:opacity-50"
+                    disabled={isLoading}
+                    onClick={async () => {
+                        if (window.confirm('Ви впевнені, що хочете видалити цю нотатку?')) {
+                            await deleteNote(Number(note.id));
+                        }
+                    }}
                 >
-                    Delete
+                    {isLoading ? 'Видалення...' : 'Delete'}
                 </button>
             </div>
         </div>

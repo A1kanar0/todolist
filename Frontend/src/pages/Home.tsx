@@ -74,7 +74,11 @@ export default function Home() {
                     <NoteCard
                         text="note text note text note text note text note text note text note text note text note text note text note text note text note text..."
                         author="Author"
-                        tags={[]}
+                        tags={[
+                            { name: '#tag2', color: 'bg-purple-200 text-purple-800' },
+                            { name: '#tag1', color: 'bg-yellow-200 text-yellow-800' }
+                        ]}
+                        // Додаємо виклик функції navigate для переходу на сторінку нотаток
                         onClick={() => navigate('/notes')}
                     />
                 </div>

@@ -11,6 +11,9 @@ export default function Notes() {
     const setSelectedNote = useNoteStore((state) => state.setSelectedNote);
     const isEditingNote = useNoteStore((state) => state.isEditingNote);
 
+    // 1. Дістаємо функцію відкриття модалки зі стору
+    const openCreateModal = useNoteStore((state) => state.openCreateModal);
+
     useEffect(() => {
         fetchNotes();
     }, [fetchNotes]);
@@ -20,7 +23,12 @@ export default function Notes() {
             <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
                 <div className="flex justify-between items-center mb-8">
                     <h1 className="text-4xl font-extrabold text-gray-800 tracking-tight">Notes</h1>
-                    <button className="px-5 py-2.5 bg-[#A890F0] hover:bg-[#967deb] text-white font-semibold rounded-xl transition-colors flex items-center gap-2 shadow-sm">
+
+                    {/* 2. Вішаємо функцію на onClick кнопки */}
+                    <button
+                        onClick={openCreateModal}
+                        className="px-5 py-2.5 bg-[#A890F0] hover:bg-[#967deb] text-white font-semibold rounded-xl transition-colors flex items-center gap-2 shadow-sm"
+                    >
                         <span className="text-xl leading-none">+</span> Add note
                     </button>
                 </div>
@@ -39,6 +47,7 @@ export default function Notes() {
                                 text={note.text}
                                 author={note.author}
                                 tags={note.tags}
+                                variant="grid"
                                 isSelected={selectedNote?.id === note.id}
                                 onClick={() => setSelectedNote(note)}
                             />

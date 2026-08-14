@@ -1,29 +1,81 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+
+// Компоненти
 import Sidebar from './components/layout/Sidebar';
 import Home from './pages/Home';
 import Tasks from './pages/Tasks';
 import Notes from './pages/Notes';
-import CreateTaskModal from './components/tasks/CreateTaskModal';
-import SettingsModal from './components/layout/SettingsModal';
-import { useTaskStore } from './store/useTaskStore';
 import Admin from './pages/Admin';
+import Auth from './pages/Auth'; // Наша нова сторінка логіну/реєстрації
+
+// Модалки та захист
+import CreateTaskModal from './components/tasks/CreateTaskModal';
+import CreateNoteModal from './components/notes/CreateNoteModal';
+import SettingsModal from './components/layout/SettingsModal';
 import ProtectedAdminRoute from './components/layout/ProtectedAdminRoute';
 
-export default function App() {
-    // Дістаємо поточну тему зі стора
-    const theme = useTaskStore((state) => state.theme);
+// Стори
+import { useTaskStore } from './store/useTaskStore';
+import { useAuthStore } from './store/useAuthStore'; // Стор авторизації
 
-    // Цей ефект спрацьовує щоразу, коли змінюється тема
+// ==========================================
+// 1. Компонент захисту (перевіряє чи є сесія)
+// ==========================================
+const ProtectedRoute = () => {
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+    // Якщо не авторизований - викидаємо на сторінку логіну
+    if (!isAuthenticated) {
+        return <Navigate to="/auth" replace />;
+    }
+
+    // Якщо авторизований - рендеримо дочірні маршрути
+    return <Outlet />;
+};
+
+// ==========================================
+// 2. Головний макет додатку (з сайдбаром)
+// ==========================================
+const AppLayout = () => {
+    return (
+        <div className="flex h-screen bg-[#F9FAFB] dark:bg-gray-900 dark:text-gray-100 text-gray-900 font-sans overflow-hidden">
+            <Sidebar />
+
+            <div className="flex-1 p-8 overflow-hidden">
+                {/* Outlet - це місце, куди підставляться Home, Tasks, Notes тощо */}
+                <Outlet />
+            </div>
+
+            {/* Глобальні модальні вікна (доступні тільки всередині додатку) */}
+            <CreateTaskModal />
+            <CreateNoteModal/>
+            <SettingsModal />
+        </div>
+    );
+};
+
+// ==========================================
+// 3. Основний компонент App
+// ==========================================
+export default function App() {
+    const theme = useTaskStore((state) => state.theme);
+    const checkSession = useAuthStore((state) => state.checkSession);
+
+    // Відновлюємо сесію (дістаємо токен з localStorage) при старті
     useEffect(() => {
-        const root = document.documentElement; // Це наш тег <html>
+        checkSession();
+    }, [checkSession]);
+
+    // Логіка теми
+    useEffect(() => {
+        const root = document.documentElement;
 
         if (theme === 'dark') {
             root.classList.add('dark');
         } else if (theme === 'light') {
             root.classList.remove('dark');
         } else if (theme === 'system') {
-            // Перевіряємо системні налаштування користувача
             if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
                 root.classList.add('dark');
             } else {
@@ -34,26 +86,25 @@ export default function App() {
 
     return (
         <BrowserRouter>
-            <div className="flex h-screen bg-[#F9FAFB] dark:bg-gray-900 dark:text-gray-100 text-gray-900 font-sans overflow-hidden">
-                <Sidebar />
+            <Routes>
+                {/* Публічний маршрут (на весь екран, без сайдбару) */}
+                <Route path="/auth" element={<Auth />} />
 
-                <div className="flex-1 p-8 overflow-hidden">
-                    <Routes>
+                {/* Захищені маршрути */}
+                <Route element={<ProtectedRoute />}>
+                    <Route element={<AppLayout />}>
+                        {/* Ці сторінки відкриються всередині <Outlet /> в AppLayout */}
                         <Route path="/" element={<Home />} />
                         <Route path="/tasks" element={<Tasks />} />
                         <Route path="/notes" element={<Notes />} />
 
-                        {/* Захищені роути для адмінів */}
+                        {/* Подвійний захист для адміна (повинен бути і авторизованим, і адміном) */}
                         <Route element={<ProtectedAdminRoute />}>
                             <Route path="/admin" element={<Admin />} />
                         </Route>
-                    </Routes>
-                </div>
-            </div>
-
-            {/* Глобальні модальні вікна */}
-            <CreateTaskModal />
-            <SettingsModal />
+                    </Route>
+                </Route>
+            </Routes>
         </BrowserRouter>
     );
 }

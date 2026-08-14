@@ -1,8 +1,16 @@
 import { create } from 'zustand';
 import type { NoteItem } from '../components/notes/NoteDetails';
+import { fetchGraphQL } from '../utils/api';
+
+export interface TagItem {
+    id: number;
+    name: string;
+    color: string;
+}
 
 interface NoteStore {
     notes: NoteItem[];
+    tags: TagItem[]; // Зберігаємо глобальні теги тут
     isLoading: boolean;
     error: string | null;
     selectedNote: NoteItem | null;
@@ -10,7 +18,13 @@ interface NoteStore {
     isEditingNote: boolean;
     isSettingsModalOpen: boolean;
     theme: 'light' | 'dark' | 'system';
+
     fetchNotes: () => Promise<void>;
+    fetchTags: () => Promise<void>;
+    createTag: (name: string, color: string) => Promise<TagItem | null>;
+    createNote: (title: string, content: string, tagIds: number[]) => Promise<boolean>;
+    deleteNote: (id: number) => Promise<boolean>;
+
     setSelectedNote: (note: NoteItem | null) => void;
     openCreateModal: () => void;
     closeCreateModal: () => void;
@@ -20,24 +34,46 @@ interface NoteStore {
     setTheme: (theme: 'light' | 'dark' | 'system') => void;
 }
 
-// 1. ОНОВЛЕНИЙ ЗАПИТ (відповідає C# класу Note)
+// ----------------- ЗАПИТИ -----------------
 const GET_NOTES_QUERY = `
   query {
     notes {
-      id
-      title
-      content
-      authorId
-      tags {
-        name
-        color
-      }
+      id title content authorId
+      author { username }
+      tags { id name color }
     }
   }
 `;
 
-export const useNoteStore = create<NoteStore>((set) => ({
+// Припускаємо, що на бекенді є такий запит для отримання всіх тегів
+const GET_TAGS_QUERY = `
+  query {
+    tags { id name color }
+  }
+`;
+
+const CREATE_TAG_MUTATION = `
+  mutation CreateTag($input: CreateTagInput!) {
+    createTag(input: $input) { id name color }
+  }
+`;
+
+const CREATE_NOTE_MUTATION = `
+  mutation CreateNote($input: CreateNoteInput!) {
+    createNote(input: $input) { id }
+  }
+`;
+
+const DELETE_NOTE_MUTATION = `
+  mutation DeleteNote($id: Int!) {
+    deleteNote(id: $id)
+  }
+`;
+// ------------------------------------------
+
+export const useNoteStore = create<NoteStore>((set, get) => ({
     notes: [],
+    tags: [],
     isLoading: false,
     error: null,
     selectedNote: null,
@@ -49,33 +85,73 @@ export const useNoteStore = create<NoteStore>((set) => ({
     fetchNotes: async () => {
         set({ isLoading: true, error: null });
         try {
-            const response = await fetch('http://localhost:5000/graphql', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ query: GET_NOTES_QUERY }),
-            });
-
-            const result = await response.json();
-
-            if (result.errors) {
-                throw new Error(result.errors[0].message);
-            }
-
-            // 2. МАПІНГ ДАНИХ (Перетворюємо C# поля на ті, що чекає UI)
-            const mappedNotes: NoteItem[] = result.data.notes.map((backendNote: any) => ({
+            const data = await fetchGraphQL(GET_NOTES_QUERY);
+            const mappedNotes: NoteItem[] = data.notes.map((backendNote: any) => ({
                 id: backendNote.id,
                 title: backendNote.title,
-                text: backendNote.content, // Перекидаємо content у text
-                author: `Author ID: ${backendNote.authorId}`, // Тимчасова заглушка, бо імені поки немає
+                text: backendNote.content,
+                author: backendNote.author?.username || 'Невідомий',
                 tags: backendNote.tags || []
             }));
-
             set({ notes: mappedNotes, isLoading: false });
         } catch (error: any) {
             console.error(error);
             set({ error: error.message, isLoading: false });
+        }
+    },
+
+    fetchTags: async () => {
+        try {
+            const data = await fetchGraphQL(GET_TAGS_QUERY);
+            set({ tags: data.tags || [] });
+        } catch (error) {
+            console.error("Не вдалося завантажити теги:", error);
+        }
+    },
+
+    createTag: async (name, color) => {
+        try {
+            const data = await fetchGraphQL(CREATE_TAG_MUTATION, { input: { name, color } });
+            const newTag = data.createTag;
+            // Додаємо новий тег у локальний стейт, щоб він відразу з'явився в модалці
+            set((state) => ({ tags: [...state.tags, newTag] }));
+            return newTag;
+        } catch (error: any) {
+            set({ error: error.message });
+            return null;
+        }
+    },
+
+    createNote: async (title, content, tagIds) => {
+        set({ isLoading: true, error: null });
+        try {
+            // authorId ставимо 0, оскільки бекенд замінить його на ID з JWT токена
+            await fetchGraphQL(CREATE_NOTE_MUTATION, {
+                input: { authorId: 0, title, content, tagIds }
+            });
+
+            // Після успішного створення — оновлюємо список нотаток
+            await get().fetchNotes();
+            set({ isLoading: false });
+            return true;
+        } catch (error: any) {
+            set({ error: error.message, isLoading: false });
+            return false;
+        }
+    },
+
+    deleteNote: async (id: number) => {
+        set({ isLoading: true, error: null });
+        try {
+            await fetchGraphQL(DELETE_NOTE_MUTATION, { id });
+
+            // Оновлюємо список нотаток і закриваємо деталі/редагування
+            await get().fetchNotes();
+            set({ selectedNote: null, isEditingNote: false, isLoading: false });
+            return true;
+        } catch (error: any) {
+            set({ error: error.message, isLoading: false });
+            return false;
         }
     },
 
