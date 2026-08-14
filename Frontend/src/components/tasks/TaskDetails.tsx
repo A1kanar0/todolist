@@ -121,12 +121,11 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
     };
 
     const handleDelete = async () => {
-        if (window.confirm(`Видалити завдання "${task.title}"?`)) {
+        if (window.confirm(`Delete task "${task.title}"?`)) {
             await deleteTask(Number(task.id));
         }
     };
 
-    // ВИКОРИСТОВУЄМО ТІЛЬКИ updateTask ДЛЯ ЗМІНИ СТАТУСУ
     const handleCompleteTask = async () => {
         const isCompleting = task.status !== 'done';
 
@@ -134,7 +133,7 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
             id: Number(task.id),
             title: task.title,
             content: task.text || ' ',
-            isCompleted: isCompleting, // Перемикаємо статус
+            isCompleted: isCompleting,
             categoryId: task.categoryId ? Number(task.categoryId) : null,
             parentId: task.parentId ? Number(task.parentId) : null,
             deadline: task.deadline ? new Date(task.deadline).toISOString() : null,
@@ -143,7 +142,6 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
 
         await updateTask(input);
 
-        // Оновлюємо стейт, щоб кнопка одразу змінилася
         setSelectedTask({
             ...task,
             status: isCompleting ? 'done' : 'todo'
@@ -158,7 +156,7 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     className="w-full text-2xl font-bold text-gray-900 bg-gray-50 p-3 rounded-lg outline-none mb-4"
-                    placeholder="Назва завдання..."
+                    placeholder="Task title..."
                 />
                 <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
@@ -218,10 +216,12 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
                 <TextEditor value={content} onChange={setContent} />
 
                 <div className="mt-auto pt-4 border-t border-gray-100 flex justify-between">
-                    <button onClick={handleDelete} className="px-4 py-2 bg-red-50 text-red-600 font-semibold rounded-xl text-sm">Видалити</button>
+                    <button onClick={handleDelete} className="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 font-semibold rounded-xl text-sm transition-colors">
+                        Delete
+                    </button>
                     <div className="flex gap-3">
-                        <Button variant="secondary" onClick={() => setIsEditingTask(false)}>Скасувати</Button>
-                        <Button variant="primary" onClick={handleSave}>Зберегти</Button>
+                        <Button variant="secondary" onClick={() => setIsEditingTask(false)}>Cancel</Button>
+                        <Button variant="primary" onClick={handleSave}>Save</Button>
                     </div>
                 </div>
             </div>
@@ -269,10 +269,10 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
                     variant={task.status === 'done' ? 'secondary' : 'primary'}
                     disabled={isCompleteBlocked}
                     onClick={handleCompleteTask}
-                    title={isCompleteBlocked ? 'Спочатку виконайте всі підзавдання' : 'Змінити статус завдання'}
+                    title={isCompleteBlocked ? 'Complete all subtasks first' : 'Change task status'}
                     className="flex-1"
                 >
-                    {task.status === 'done' ? 'Відновити' : 'Виконати'}
+                    {task.status === 'done' ? 'Restore' : 'Complete'}
                 </Button>
             </div>
         </div>
