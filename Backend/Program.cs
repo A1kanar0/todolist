@@ -22,7 +22,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000") // Вкажи точну адресу твого фронтенду
+        policy.WithOrigins("http://localhost:5173") // Вкажи точну адресу твого фронтенду
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials(); // Обов'язково, бо ти юзаєш куки для JWT!

@@ -22,15 +22,15 @@ export default function NoteDetails({ note }: NoteDetailsProps) {
     const deleteNote = useNoteStore((state) => state.deleteNote);
     const isLoading = useNoteStore((state) => state.isLoading);
 
-    // Локальний стейт для редагування полів нотатки
-    const [title, setTitle] = useState(note?.title || '');
-    const [content, setContent] = useState(note?.text || '');
+    // Локальний стейт для редагування полів (оголошуємо рівно один раз)
+    const [title, setTitle] = useState('');
+    const [content, setContent] = useState('');
 
-    // Оновлюємо локальний стейт, коли змінюється вибрана нотатка
+    // Синхронізуємо локальний стейт, коли змінюється вибрана нотатка
     useEffect(() => {
         if (note) {
-            setTitle(note.title);
-            setContent(note.text);
+            setTitle(note.title || '');
+            setContent(note.text || '');
         }
     }, [note]);
 
@@ -60,8 +60,8 @@ export default function NoteDetails({ note }: NoteDetailsProps) {
                 </div>
 
                 <TextEditor
-                    defaultValue={content}
-                    // Якщо у твого TextEditor є onChange або подібний пропс для збору тексту, підключи його сюди
+                    value={content}
+                    onChange={(e: any) => setContent(e.target.value)}
                 />
 
                 <div className="mt-auto pt-4 border-t border-gray-100 flex justify-end gap-3">
@@ -92,7 +92,6 @@ export default function NoteDetails({ note }: NoteDetailsProps) {
     // ==========================================
     return (
         <div className="flex-1 flex flex-col bg-white rounded-xl p-6 shadow-sm border border-gray-200 overflow-y-auto custom-scrollbar">
-
             {/* Назва нотатки */}
             <div className="mb-4">
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">{note.title}</h3>
@@ -107,12 +106,17 @@ export default function NoteDetails({ note }: NoteDetailsProps) {
                 ))}
             </div>
 
-            {/* Повний текст нотатки */}
+            {/* Повний текст нотатки (підтримка HTML від TextEditor) */}
             <div className="mb-6">
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Опис</span>
-                <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
-                    {note.text}
-                </p>
+                {note.text && note.text.trim() ? (
+                    <div
+                        className="text-gray-700 text-sm leading-relaxed prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: note.text }}
+                    />
+                ) : (
+                    <p className="text-gray-400 italic text-sm">Опис відсутній</p>
+                )}
             </div>
 
             {/* Автор */}

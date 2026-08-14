@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { useTaskStore } from '../store/useTaskStore';
-import TaskItem, { type TaskNode } from '../components/tasks/TaskItem';
+import { useTaskStore, type TaskNode } from '../store/useTaskStore';
+import TaskItem from '../components/tasks/TaskItem';
 import NoteCard from '../components/notes/NoteCard.tsx';
 
 export default function Home() {
@@ -14,34 +14,36 @@ export default function Home() {
             title: 'Підготувати реліз',
             text: 'Перевірити всі баги перед пушем на прод.',
             status: 'todo',
-            deadlineDays: 0,
-            category: 'Management'
+            deadline: new Date(Date.now() + 86400000).toISOString(), // +1 день
+            categoryId: 'Management'
         },
         {
             id: '1',
             title: 'Розробити фронтенд',
             text: 'Налаштувати React, Tailwind, та базовий Layout сторінки.',
             status: 'in-progress',
-            deadlineDays: 1,
-            category: 'Development'
+            deadline: new Date(Date.now() + 86400000 * 2).toISOString(), // +2 дні
+            categoryId: 'Development'
         },
         {
             id: '2',
             title: 'Інтеграція з бекендом',
             text: 'Підключити Axios та написати сервіси для API.',
             status: 'todo',
-            deadlineDays: 5,
-            category: 'API'
+            deadline: new Date(Date.now() + 86400000 * 5).toISOString(), // +5 днів
+            categoryId: 'API'
         }
     ];
 
-    // Сортуємо таски за дедлайном
-    const sortedTasks = [...homeTasks].sort((a, b) => (a.deadlineDays || 0) - (b.deadlineDays || 0));
+    const sortedTasks = [...homeTasks].sort((a, b) => {
+        const dateA = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+        const dateB = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+        return dateA - dateB;
+    });
 
     return (
         <div className="flex gap-8 h-full">
 
-            {/* Головна колонка з тасками (займає більшу частину) */}
             <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
                 <div className="flex justify-between items-center mb-8">
                     <h1 className="text-4xl font-extrabold text-gray-800 tracking-tight">Home</h1>
@@ -66,7 +68,6 @@ export default function Home() {
                 </div>
             </div>
 
-            {/* Права панель з нотатками */}
             <div className="w-80 bg-[#F3F4F6] rounded-2xl p-6 flex flex-col">
                 <h2 className="text-2xl font-bold text-gray-800 mb-6">Notes</h2>
                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
