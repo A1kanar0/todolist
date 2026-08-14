@@ -21,6 +21,7 @@ export interface TaskNode {
     categoryId?: string | null;
     executorIds?: string[];
     parentId?: string | null;
+    hasUncompletedChildren?: boolean;
 }
 
 export interface CreateTaskInput {
@@ -52,6 +53,7 @@ interface FlatTask {
     parentId?: string | number | null;
     deadline?: string;
     executors?: { id: string | number }[] | null;
+    hasUncompletedChildren?: boolean;
 }
 
 interface TaskStore {
@@ -83,7 +85,7 @@ interface TaskStore {
 const GET_TASKS_AND_LOOKUPS_QUERY = `
   query GetTasksAndLookups {
     tasks {
-      id title content isCompleted deadline categoryId parentId
+      id title content isCompleted deadline categoryId parentId hasUncompletedChildren
       executors {
         id
       }
@@ -100,28 +102,29 @@ const GET_TASKS_AND_LOOKUPS_QUERY = `
 const UPDATE_TASK_MUTATION = `
   mutation UpdateTask($input: UpdateTaskInput!) {
     updateTask(input: $input) { 
-      id title content isCompleted deadline categoryId parentId
+      id title content isCompleted deadline categoryId parentId hasUncompletedChildren
       executors {
         id
       }
     }
-  }
-`;
-
-const DELETE_TASK_MUTATION = `
-  mutation DeleteTask($id: Int!) {
-    deleteTask(id: $id)
   }
 `;
 
 const CREATE_TASK_MUTATION = `
   mutation CreateTask($input: CreateTaskInput!) {
     createTask(input: $input) { 
-      id title content isCompleted deadline categoryId parentId
+      id title content isCompleted deadline categoryId parentId hasUncompletedChildren
       executors {
         id
       }
     }
+  }
+`;
+
+// ОСЬ ЦЯ КОНСТАНТА, ЯКУ Я ЗАБУВ
+const DELETE_TASK_MUTATION = `
+  mutation DeleteTask($id: Int!) {
+    deleteTask(id: $id)
   }
 `;
 
@@ -143,6 +146,7 @@ const buildTaskTree = (flatTasks: FlatTask[]): TaskNode[] => {
             parentId: task.parentId ? task.parentId.toString() : null,
             deadline: task.deadline ? task.deadline : undefined,
             executorIds: task.executors ? task.executors.map(e => e.id.toString()) : [],
+            hasUncompletedChildren: task.hasUncompletedChildren || false,
             children: []
         });
     });
@@ -241,6 +245,7 @@ export const useTaskStore = create<TaskStore>((set) => ({
                 parentId: createdData.parentId ? createdData.parentId.toString() : null,
                 deadline: createdData.deadline ? createdData.deadline : undefined,
                 executorIds: createdData.executors ? createdData.executors.map((e: { id: string | number }) => e.id.toString()) : [],
+                hasUncompletedChildren: createdData.hasUncompletedChildren || false,
             };
 
             set({ selectedTask: newTask, isCreateModalOpen: false, isLoading: false, isEditingTask: false });

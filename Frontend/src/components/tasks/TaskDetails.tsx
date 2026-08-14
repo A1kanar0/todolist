@@ -40,7 +40,6 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
 
     const [title, setTitle] = useState(task?.title || '');
     const [categoryId, setCategoryId] = useState(task?.categoryId ? String(task.categoryId) : '');
-    // Тепер це масив
     const [executorIds, setExecutorIds] = useState<string[]>(task?.executorIds ? task.executorIds.map(String) : []);
     const [deadline, setDeadline] = useState(formatForDateTimeInput(task?.deadline));
     const [parentId, setParentId] = useState(task?.parentId ? String(task.parentId) : '');
@@ -77,7 +76,6 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
         return categories.find(c => String(c.id) === String(cId))?.name || 'Немає';
     };
 
-    // Отримуємо імена всіх обраних юзерів
     const getExecutorNames = (uIds?: (string | number)[] | null) => {
         if (!uIds || uIds.length === 0) return 'Не призначено';
         const foundUsers = users.filter(u => uIds.map(String).includes(String(u.id)));
@@ -94,7 +92,7 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
         const updatedDeadline = deadline ? new Date(deadline).toISOString() : null;
         const numCategoryId = categoryId ? Number(categoryId) : null;
         const numParentId = parentId ? Number(parentId) : null;
-        const executorNumIds = executorIds.map(Number); // Перетворюємо масив рядків на масив чисел для беку
+        const executorNumIds = executorIds.map(Number);
 
         const input = {
             id: Number(task.id),
@@ -109,13 +107,12 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
 
         await updateTask(input);
 
-        // Синхронізуємо локальний стейт
         setSelectedTask({
             ...task,
             title,
             text: content,
             categoryId: numCategoryId ? String(numCategoryId) : null,
-            executorIds: executorIds, // Стейт очікує масив рядків
+            executorIds: executorIds,
             deadline: updatedDeadline || undefined,
             parentId: numParentId ? String(numParentId) : null,
         });
@@ -175,7 +172,6 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
                             ))}
                         </select>
                     </div>
-                    {/* Блок з галочками для виконавців */}
                     <div>
                         <label className="block text-sm font-bold text-gray-700 mb-1">Виконавці</label>
                         <div className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 max-h-28 overflow-y-auto custom-scrollbar flex flex-col gap-1">
@@ -243,7 +239,20 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
             </div>
             <div className="mt-auto pt-6 border-t border-gray-100 flex gap-3">
                 <EditButton className="flex-1" onClick={() => setIsEditingTask(true)} />
-                <Button variant="primary" className="flex-1">Виконати</Button>
+                {/* ОНОВЛЕНА КНОПКА ВИКОНАННЯ */}
+                <Button
+                    variant="primary"
+                    className={`flex-1 ${task.hasUncompletedChildren ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
+                    disabled={task.hasUncompletedChildren}
+                    onClick={() => {
+                        if (!task.hasUncompletedChildren) {
+                            alert('Логіка виконання (в розробці)');
+                        }
+                    }}
+                    title={task.hasUncompletedChildren ? 'Спочатку виконайте всі підзавдання' : 'Виконати завдання'}
+                >
+                    Виконати
+                </Button>
             </div>
         </div>
     );
