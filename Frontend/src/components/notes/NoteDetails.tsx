@@ -22,29 +22,17 @@ export default function NoteDetails({ note }: NoteDetailsProps) {
     const deleteNote = useNoteStore((state) => state.deleteNote);
     const isLoading = useNoteStore((state) => state.isLoading);
 
-    // Локальний стейт для редагування полів нотатки
-    const [title, setTitle] = useState(note?.title || '');
-    const [content, setContent] = useState(note?.text || '');
+    // Локальний стейт для редагування полів (оголошуємо рівно один раз)
+    const [title, setTitle] = useState('');
+    const [content, setContent] = useState('');
 
-    // Оновлюємо локальний стейт, коли змінюється вибрана нотатка
+    // Синхронізуємо локальний стейт, коли змінюється вибрана нотатка
     useEffect(() => {
         if (note) {
-            setTitle(note.title);
-            setContent(note.text);
+            setTitle(note.title || '');
+            setContent(note.text || '');
         }
     }, [note]);
-
-    // Стейт для редагування
-    const [prevNoteId, setPrevNoteId] = useState(note?.id);
-    const [title, setTitle] = useState(note?.title || '');
-    const [content, setContent] = useState(note?.text || '');
-
-    // Синхронізація стейту під час зміни обраної нотатки
-    if (note && note.id !== prevNoteId) {
-        setPrevNoteId(note.id);
-        setTitle(note.title || '');
-        setContent(note.text || '');
-    }
 
     if (!note) {
         return (
@@ -72,8 +60,8 @@ export default function NoteDetails({ note }: NoteDetailsProps) {
                 </div>
 
                 <TextEditor
-                    defaultValue={content}
-                    // Якщо у твого TextEditor є onChange або подібний пропс для збору тексту, підключи його сюди
+                    value={content}
+                    onChange={(e: any) => setContent(e.target.value)}
                 />
 
                 <div className="mt-auto pt-4 border-t border-gray-100 flex justify-end gap-3">
