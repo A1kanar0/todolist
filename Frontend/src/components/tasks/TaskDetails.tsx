@@ -251,7 +251,7 @@ export default function TaskDetails({ task }: TaskDetailsProps) {
                     }}
                     title={task.hasUncompletedChildren ? 'Спочатку виконайте всі підзавдання' : 'Виконати завдання'}
                 >
-                    Виконати
+                    Complete
                 </Button>
             </div>
         </div>

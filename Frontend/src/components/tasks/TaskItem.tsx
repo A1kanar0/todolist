@@ -68,21 +68,22 @@ export default function TaskItem({ task, depth = 0, hideChildren = false, onNavi
                                 </svg>
                             </button>
                         )}
-                        <span className={`font-bold transition-colors truncate ${!hasChildren || hideChildren ? 'ml-6' : ''} ${
+                        {/* ПРИБРАНО ml-6, тепер текст завжди йде одразу за іконкою або від початку */}
+                        <span className={`font-bold transition-colors truncate ${
                             isSelected ? 'text-[#A890F0]' : 'text-gray-900 group-hover:text-[#7E69AB]'
                         }`} title={task.title}>
                             {task.title}
                         </span>
+                        {categoryName && (
+                            <span className="text-gray-500 text-xs border border-gray-200 px-1.5 py-0.5 rounded-md flex items-center gap-1 truncate max-w-[120px]">
+                                <span className="truncate">{categoryName}</span>
+                            </span>
+                        )}
                     </div>
 
                     {/* Права частина - Бейджі */}
                     <div className="flex items-center gap-2 shrink-0 max-w-[60%] justify-end">
-                        {categoryName && (
-                            <span className="text-gray-500 text-xs border border-gray-200 px-1.5 py-0.5 rounded-md flex items-center gap-1 truncate max-w-[120px]">
-                                <span className="shrink-0">📁</span>
-                                <span className="truncate">{categoryName}</span>
-                            </span>
-                        )}
+
                         {executorUsers.length > 0 && (
                             <span
                                 className="text-gray-500 text-xs border border-gray-200 px-1.5 py-0.5 rounded-md flex items-center gap-1 truncate max-w-[150px]"
