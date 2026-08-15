@@ -3,12 +3,20 @@ import { useTaskStore, type TaskNode } from '../store/useTaskStore';
 import TaskItem from '../components/tasks/TaskItem';
 import TaskDetails from '../components/tasks/TaskDetails';
 
+// Рекурсивна перевірка: чи виконане завдання і ВСІ його підзавдання
+const isTreeCompleted = (node: TaskNode): boolean => {
+    if (node.status !== 'done') return false;
+    if (node.children && node.children.length > 0) {
+        return node.children.every(isTreeCompleted);
+    }
+    return true;
+};
+
 export default function Tasks() {
     const tasks = useTaskStore((state) => state.tasks);
     const isLoading = useTaskStore((state) => state.isLoading);
     const fetchTasks = useTaskStore((state) => state.fetchTasks);
 
-    // Підтягуємо дані для селектів фільтрації
     const categories = useTaskStore((state) => state.categories);
     const users = useTaskStore((state) => state.users);
 
@@ -26,11 +34,9 @@ export default function Tasks() {
         fetchTasks();
     }, [fetchTasks]);
 
-    // Розумна фільтрація дерева тасок
     const filteredTasks = useMemo(() => {
         const filterNodes = (nodes: TaskNode[]): TaskNode[] => {
             return nodes.reduce((acc: TaskNode[], task) => {
-                // Перевіряємо, чи підходить САМА таска під обрані фільтри
                 const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
                 const matchesCategory = filterCategory ? String(task.categoryId) === filterCategory : true;
                 const matchesExecutor = filterExecutor ? task.executorIds?.includes(filterExecutor) : true;
@@ -38,10 +44,8 @@ export default function Tasks() {
 
                 const isMatch = matchesSearch && matchesCategory && matchesExecutor && matchesStatus;
 
-                // Рекурсивно перевіряємо дітей
                 const filteredChildren = task.children ? filterNodes(task.children) : [];
 
-                // Якщо таска підходить під фільтр АБО хоча б один її нащадок підходить - додаємо її в список
                 if (isMatch || filteredChildren.length > 0) {
                     acc.push({ ...task, children: filteredChildren });
                 }
@@ -50,7 +54,16 @@ export default function Tasks() {
             }, []);
         };
 
-        return filterNodes(tasks);
+        const result = filterNodes(tasks);
+
+        // Сортуємо: активні дерева йдуть спочатку, а повністю виконані — опускаються в самий кінець
+        return result.sort((a, b) => {
+            const aDone = isTreeCompleted(a);
+            const bDone = isTreeCompleted(b);
+
+            if (aDone === bDone) return 0;
+            return aDone ? 1 : -1;
+        });
     }, [tasks, searchQuery, filterCategory, filterExecutor, filterStatus]);
 
     return (
