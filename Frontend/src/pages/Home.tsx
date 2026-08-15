@@ -1,20 +1,38 @@
 import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTaskStore, type TaskNode } from '../store/useTaskStore';
+import { useNoteStore } from '../store/useNoteStore';
 import TaskItem from '../components/tasks/TaskItem';
-import NoteCard from '../components/notes/NoteCard.tsx';
+import NoteCard from '../components/notes/NoteCard';
+
+// Хелпер для очищення тексту від HTML-тегів для прев'ю в картці
+const stripHtml = (html?: string) => {
+    if (!html) return '';
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.textContent || '';
+};
 
 export default function Home() {
     const navigate = useNavigate();
-    const openCreateModal = useTaskStore((state) => state.openCreateModal);
 
+    // Стейт тасок
+    const openCreateTaskModal = useTaskStore((state) => state.openCreateModal);
     const tasksTree = useTaskStore((state) => state.tasks);
     const fetchTasks = useTaskStore((state) => state.fetchTasks);
-    const isLoading = useTaskStore((state) => state.isLoading);
+    const isTasksLoading = useTaskStore((state) => state.isLoading);
 
+    // Стейт нотаток
+    const notes = useNoteStore((state) => state.notes);
+    const fetchNotes = useNoteStore((state) => state.fetchNotes);
+    const isNotesLoading = useNoteStore((state) => state.isLoading);
+    const setSelectedNote = useNoteStore((state) => state.setSelectedNote);
+    const openCreateNoteModal = useNoteStore((state) => state.openCreateModal);
+
+    // Завантажуємо і таски, і нотатки при старті
     useEffect(() => {
         fetchTasks();
-    }, [fetchTasks]);
+        fetchNotes();
+    }, [fetchTasks, fetchNotes]);
 
     // Розгортаємо дерево в плоский список, відсіюємо виконані і сортуємо по дедлайнам
     const sortedTasks = useMemo(() => {
@@ -31,7 +49,6 @@ export default function Home() {
 
         const flatTasks = flattenTasks(tasksTree);
 
-        // Фільтруємо виконані завдання та сортуємо за дедлайном
         return flatTasks
             .filter(task => task.status !== 'done')
             .sort((a, b) => {
@@ -41,15 +58,22 @@ export default function Home() {
             });
     }, [tasksTree]);
 
+    // Обробник створення нової нотатки з головної
+    const handleAddNote = () => {
+        navigate('/notes');
+        openCreateNoteModal();
+    };
+
     return (
         <div className="flex gap-8 h-full">
 
+            {/* Ліва частина: Таски */}
             <div className="flex-1 flex flex-col min-w-0">
                 <div className="flex justify-between items-center mb-8 shrink-0">
                     <h1 className="text-4xl font-extrabold text-gray-800 tracking-tight">Home</h1>
 
                     <button
-                        onClick={openCreateModal}
+                        onClick={openCreateTaskModal}
                         className="px-5 py-2.5 bg-[#A890F0] hover:bg-[#967deb] text-white font-semibold rounded-xl transition-colors flex items-center gap-2 shadow-sm"
                     >
                         <span className="text-xl leading-none">+</span> Add task
@@ -57,7 +81,7 @@ export default function Home() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar pb-10">
-                    {isLoading ? (
+                    {isTasksLoading ? (
                         <div className="flex justify-center items-center h-40">
                             <span className="text-gray-500 font-medium">Завантаження завдань...</span>
                         </div>
@@ -80,21 +104,40 @@ export default function Home() {
                 </div>
             </div>
 
+            {/* Права частина: Нотатки */}
             <div className="w-80 bg-[#F3F4F6] rounded-2xl p-6 flex flex-col shrink-0">
                 <h2 className="text-2xl font-bold text-gray-800 mb-6">Notes</h2>
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                    <NoteCard
-                        text="note text note text note text note text note text note text note text note text note text note text note text note text note text..."
-                        author="Author"
-                        tags={[
-                            { name: '#tag2', color: 'bg-purple-200 text-purple-800' },
-                            { name: '#tag1', color: 'bg-yellow-200 text-yellow-800' }
-                        ]}
-                        onClick={() => navigate('/notes')}
-                    />
+
+                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar flex flex-col gap-4">
+                    {isNotesLoading ? (
+                        <div className="flex justify-center items-center h-20">
+                            <span className="text-gray-400 text-sm">Завантаження...</span>
+                        </div>
+                    ) : notes.length > 0 ? (
+                        notes.map(note => (
+                            <NoteCard
+                                key={note.id}
+                                title={note.title}
+                                text={stripHtml(note.text)}
+                                author={note.author}
+                                tags={note.tags}
+                                onClick={() => {
+                                    setSelectedNote(note);
+                                    navigate('/notes');
+                                }}
+                            />
+                        ))
+                    ) : (
+                        <div className="flex justify-center items-center h-32 border-2 border-dashed border-gray-300 rounded-xl">
+                            <span className="text-gray-400 text-sm font-medium">Нотаток ще немає</span>
+                        </div>
+                    )}
                 </div>
 
-                <button className="mt-6 w-full py-3 bg-[#A890F0] hover:bg-[#967deb] text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm">
+                <button
+                    onClick={handleAddNote}
+                    className="mt-6 w-full py-3 bg-[#A890F0] hover:bg-[#967deb] text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm"
+                >
                     <span className="text-xl">+</span> Add note
                 </button>
             </div>
