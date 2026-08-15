@@ -4,7 +4,7 @@ export interface NoteCardProps {
     text: string;
     author: string;
     tags?: { name: string; color: string }[];
-    variant?: 'compact' | 'grid'; // Повертаємо назад
+    variant?: 'compact' | 'grid';
     isSelected?: boolean;
     onClick?: () => void;
 }
@@ -19,7 +19,6 @@ export default function NoteCard({
                                      onClick
                                  }: NoteCardProps) {
 
-    // Створюємо динамічні класи залежно від variant
     const isCompact = variant === 'compact';
 
     return (
@@ -43,11 +42,16 @@ export default function NoteCard({
                         {title || 'Без назви'}
                     </span>
 
-                    {/* Якщо компактний режим - можна ховати теги або показувати менше */}
-                    {!isCompact && (
-                        <div className="flex gap-1.5 flex-wrap justify-end">
-                            {tags?.map((tag, index) => (
-                                <span key={index} className={`px-2.5 py-1 rounded-md text-xs font-bold ${tag.color}`}>
+                    {/* Відображення тегів справа зверху */}
+                    {tags && tags.length > 0 && (
+                        <div className={`flex flex-wrap justify-end ${isCompact ? 'gap-1 max-w-[50%]' : 'gap-1.5'}`}>
+                            {tags.map((tag, index) => (
+                                <span
+                                    key={index}
+                                    className={`rounded-md font-bold ${tag.color} ${
+                                        isCompact ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs'
+                                    }`}
+                                >
                                     {tag.name}
                                 </span>
                             ))}
