@@ -23,14 +23,25 @@ export default function CreateTaskModal() {
 
     const [title, setTitle] = useState('');
     const [categoryId, setCategoryId] = useState('');
-    const [executorId, setExecutorId] = useState('');
     const [deadline, setDeadline] = useState('');
     const [parentId, setParentId] = useState('');
     const [content, setContent] = useState('');
 
+    // Замість одного executorId тепер масив executorIds
+    const [executorIds, setExecutorIds] = useState<number[]>([]);
+
     if (!isCreateModalOpen) return null;
 
     const availableParents = getFlatTaskList(tasksTree);
+
+    // Функція для додавання/видалення виконавця
+    const toggleExecutor = (id: number) => {
+        setExecutorIds((prev) =>
+            prev.includes(id)
+                ? prev.filter((eId) => eId !== id)
+                : [...prev, id]
+        );
+    };
 
     const handleCreate = async () => {
         const input = {
@@ -39,7 +50,8 @@ export default function CreateTaskModal() {
             categoryId: categoryId ? Number(categoryId) : null,
             parentId: parentId ? Number(parentId) : null,
             deadline: deadline ? new Date(deadline).toISOString() : null,
-            executorIds: executorId ? [Number(executorId)] : null,
+            // Передаємо масив або null, якщо нікого не вибрано
+            executorIds: executorIds.length > 0 ? executorIds : null,
         };
 
         const isSuccess = await createTask(input);
@@ -47,7 +59,7 @@ export default function CreateTaskModal() {
         if (isSuccess) {
             setTitle('');
             setCategoryId('');
-            setExecutorId('');
+            setExecutorIds([]);
             setDeadline('');
             setParentId('');
             setContent('');
@@ -88,27 +100,45 @@ export default function CreateTaskModal() {
                             className="w-full px-4 py-3 bg-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-[#A890F0] text-gray-500 font-semibold cursor-pointer"
                         />
 
-                        <select
-                            value={executorId}
-                            onChange={(e) => setExecutorId(e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-[#A890F0] text-gray-800 font-semibold cursor-pointer"
-                        >
-                            <option value="">Оберіть виконавця...</option>
-                            {users.map(u => (
-                                <option key={u.id} value={u.id}>{u.username}</option>
-                            ))}
-                        </select>
-
+                        {/* Батьківське завдання розтягуємо на 2 колонки, бо прибрали select виконавця */}
                         <select
                             value={parentId}
                             onChange={(e) => setParentId(e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-[#A890F0] text-gray-800 font-semibold cursor-pointer"
+                            className="w-full md:col-span-2 px-4 py-3 bg-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-[#A890F0] text-gray-800 font-semibold cursor-pointer"
                         >
                             <option value="">Без батьківського (Кореневе)</option>
                             {availableParents.map(p => (
                                 <option key={p.id} value={p.id}>{p.title}</option>
                             ))}
                         </select>
+                    </div>
+
+                    {/* Новий блок вибору виконавців */}
+                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 flex flex-col gap-3">
+                        <span className="block text-sm font-bold text-gray-500 uppercase tracking-wider">
+                            Виконавці
+                        </span>
+                        <div className="flex flex-wrap gap-2">
+                            {users.length === 0 && <span className="text-sm text-gray-400">Немає доступних користувачів</span>}
+                            {users.map((u) => {
+                                const isSelected = executorIds.includes(Number(u.id));
+                                return (
+                                    <button
+                                        key={u.id}
+                                        type="button"
+                                        onClick={() => toggleExecutor(Number(u.id))}
+                                        className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all border-2 flex items-center gap-1.5 ${
+                                            isSelected
+                                                ? 'bg-purple-100 text-purple-700 border-purple-200 shadow-sm scale-105'
+                                                : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+                                        }`}
+                                    >
+                                        <span>👤</span>
+                                        {u.username}
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
 
                     <div className="mt-2 flex-1 min-h-[200px] flex flex-col">
