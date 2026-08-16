@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { NoteItem } from '../components/notes/NoteDetails';
 import { fetchGraphQL } from '../utils/api';
+import { useAuthStore } from './useAuthStore';
 
 export interface TagItem {
     id: number;
@@ -22,8 +23,10 @@ interface NoteStore {
     fetchNotes: () => Promise<void>;
     fetchTags: () => Promise<void>;
     createTag: (name: string, color: string) => Promise<TagItem | null>;
+    deleteTag: (id: number) => Promise<boolean>;
     createNote: (title: string, content: string, tagIds: number[]) => Promise<boolean>;
     deleteNote: (id: number) => Promise<boolean>;
+    updateNote: (id: number, title: string, content: string, tagIds: number[]) => Promise<boolean>;
 
     setSelectedNote: (note: NoteItem | null) => void;
     openCreateModal: () => void;
@@ -45,7 +48,6 @@ const GET_NOTES_QUERY = `
   }
 `;
 
-// Припускаємо, що на бекенді є такий запит для отримання всіх тегів
 const GET_TAGS_QUERY = `
   query {
     tags { id name color }
@@ -64,9 +66,21 @@ const CREATE_NOTE_MUTATION = `
   }
 `;
 
+const UPDATE_NOTE_MUTATION = `
+  mutation UpdateNote($input: UpdateNoteInput!) {
+    updateNote(input: $input) { id }
+  }
+`;
+
 const DELETE_NOTE_MUTATION = `
   mutation DeleteNote($id: Int!) {
     deleteNote(id: $id)
+  }
+`;
+
+const DELETE_TAG_MUTATION = `
+  mutation DeleteTag($id: Int!) {
+    deleteTag(id: $id)
   }
 `;
 // ------------------------------------------
@@ -122,6 +136,20 @@ export const useNoteStore = create<NoteStore>((set, get) => ({
         }
     },
 
+    deleteTag: async (id: number) => {
+        try {
+            await fetchGraphQL(DELETE_TAG_MUTATION, { id });
+
+            set((state) => ({ tags: state.tags.filter(t => t.id !== id) }));
+
+            get().fetchNotes();
+            return true;
+        } catch (error: any) {
+            console.error("Помилка видалення тегу:", error);
+            return false;
+        }
+    },
+
     createNote: async (title, content, tagIds) => {
         set({ isLoading: true, error: null });
         try {
@@ -133,6 +161,35 @@ export const useNoteStore = create<NoteStore>((set, get) => ({
             // Після успішного створення — оновлюємо список нотаток
             await get().fetchNotes();
             set({ isLoading: false });
+            return true;
+        } catch (error: any) {
+            set({ error: error.message, isLoading: false });
+            return false;
+        }
+    },
+
+    updateNote: async (id, title, content, tagIds) => {
+        set({ isLoading: true, error: null });
+        try {
+            const currentUser = useAuthStore.getState().user;
+            const authorId = currentUser ? Number(currentUser.id) : 0;
+
+            await fetchGraphQL(UPDATE_NOTE_MUTATION, {
+                input: { id, authorId, title, content, tagIds }
+            });
+
+            // 1. Оновлюємо загальний список нотаток
+            await get().fetchNotes();
+
+            // 2. ДОДАНО: Шукаємо свіжу версію цієї нотатки у щойно завантаженому списку
+            const updatedNote = get().notes.find(n => Number(n.id) === id);
+
+            // 3. Оновлюємо selectedNote, щоб UI миттєво відмалював нові дані
+            set({
+                selectedNote: updatedNote || null,
+                isLoading: false
+            });
+
             return true;
         } catch (error: any) {
             set({ error: error.message, isLoading: false });

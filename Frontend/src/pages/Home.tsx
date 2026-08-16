@@ -118,7 +118,7 @@ export default function Home() {
                             <NoteCard
                                 key={note.id}
                                 title={note.title}
-                                text={stripHtml(note.text)}
+                                text={note.text}
                                 author={note.author}
                                 tags={note.tags}
                                 onClick={() => {

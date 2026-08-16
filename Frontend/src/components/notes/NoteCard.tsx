@@ -21,10 +21,16 @@ export default function NoteCard({
 
     const isCompact = variant === 'compact';
 
+    // Обмежуємо кількість тегів, щоб вони гарантовано не ламали верстку
+    const MAX_TAGS = isCompact ? 1 : 3;
+    const visibleTags = tags?.slice(0, MAX_TAGS) || [];
+    const hiddenTagsCount = (tags?.length || 0) - MAX_TAGS;
+    const hasMoreTags = hiddenTagsCount > 0;
+
     return (
         <div
             onClick={onClick}
-            className={`cursor-pointer rounded-2xl flex flex-col justify-between transition-all border-2 group
+            className={`cursor-pointer rounded-2xl flex flex-col justify-between transition-all border-2 group/card
                 ${isCompact ? 'p-4 min-h-[160px]' : 'p-5 min-h-[220px]'} 
                 ${isSelected
                 ? 'bg-purple-50/50 border-[#A890F0] shadow-md'
@@ -34,34 +40,71 @@ export default function NoteCard({
         >
             {/* Верхня частина */}
             <div>
-                <div className={`flex items-start justify-between ${isCompact ? 'mb-2' : 'mb-3'}`}>
-                    <span className={`font-extrabold transition-colors 
-                        ${isCompact ? 'text-base' : 'text-lg'}
-                        ${isSelected ? 'text-[#A890F0]' : 'text-gray-900 group-hover:text-[#7E69AB]'}
-                    `}>
-                        {title || 'Без назви'}
-                    </span>
+                <div className={`flex flex-col items-start ${isCompact ? 'mb-3 gap-2' : 'mb-4 gap-2.5'}`}>
 
-                    {/* Відображення тегів справа зверху */}
-                    {tags && tags.length > 0 && (
-                        <div className={`flex flex-wrap justify-end ${isCompact ? 'gap-1 max-w-[50%]' : 'gap-1.5'}`}>
-                            {tags.map((tag, index) => (
+                    {/* Відображення тегів НАД назвою */}
+                    {visibleTags.length > 0 && (
+                        <div className="flex flex-wrap justify-start gap-1.5 w-full">
+                            {visibleTags.map((tag, index) => (
                                 <span
                                     key={index}
-                                    className={`rounded-md font-bold ${tag.color} ${
+                                    className={`rounded-md font-bold whitespace-nowrap ${tag.color} ${
                                         isCompact ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs'
                                     }`}
                                 >
                                     {tag.name}
                                 </span>
                             ))}
+
+                            {/* Кнопка "..." з тултипом */}
+                            {hasMoreTags && (
+                                <div className="relative group/tooltip flex items-center">
+                                    <span
+                                        className={`rounded-md font-bold bg-gray-100 text-gray-500 flex items-center justify-center cursor-help transition-colors group-hover/tooltip:bg-gray-200 ${
+                                            isCompact ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs'
+                                        }`}
+                                    >
+                                        ...
+                                    </span>
+
+                                    {/* Випадаючий список тегів при наведенні */}
+                                    <div className="absolute left-0 top-full mt-2 hidden group-hover/tooltip:flex flex-col bg-white border border-gray-100 shadow-xl rounded-xl p-3 w-max max-w-[200px] z-20">
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                                            Усі теги ({tags.length})
+                                        </span>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {tags.map((tag, index) => (
+                                                <span
+                                                    key={index}
+                                                    className={`rounded-md font-bold px-2 py-1 text-[10px] ${tag.color}`}
+                                                >
+                                                    {tag.name}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
+
+                    {/* Назва займає всю ширину */}
+                    <span className={`font-extrabold transition-colors line-clamp-2 w-full
+                        ${isCompact ? 'text-base' : 'text-lg'}
+                        ${isSelected ? 'text-[#A890F0]' : 'text-gray-900 group-hover/card:text-[#7E69AB]'}
+                    `}>
+                        {title || 'Без назви'}
+                    </span>
                 </div>
 
-                <p className={`text-gray-600 leading-relaxed ${isCompact ? 'text-xs line-clamp-2' : 'text-sm line-clamp-4'}`}>
-                    {text}
-                </p>
+                {/* Відрендерений HTML з класом prose та стилями для посилань */}
+                <div
+                    className={`text-gray-600 leading-relaxed prose max-w-none 
+                        [&>p]:m-0 [&>p]:inline [&_ul]:m-0 [&_ol]:m-0 [&_li]:m-0 
+                        [&_a]:text-[#A890F0] [&_a]:underline [&_a]:font-medium [&_a]:hover:text-[#967deb]
+                        ${isCompact ? 'text-xs prose-sm prose-p:text-xs line-clamp-2' : 'text-sm prose-sm line-clamp-4'}`}
+                    dangerouslySetInnerHTML={{ __html: text || '' }}
+                />
             </div>
 
             {/* Нижня частина: Іконка та Автор */}
