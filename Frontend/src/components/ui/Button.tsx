@@ -14,16 +14,15 @@ export default function Button({
                                    ...props
                                }: ButtonProps) {
 
-    // Базові стилі, які є у всіх кнопок (шрифт, анімація, курсор)
-    const baseStyles = "transition-all font-semibold flex items-center gap-2 cursor-pointer";
+    // Базові стилі: додали заборонений курсор, прозорість і ч/б фільтр для disabled
+    const baseStyles = "transition-all font-semibold flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 disabled:grayscale";
 
-    // Словник стилів для різних варіантів кнопок
+    // Словник стилів: додали disabled:hover:... для скасування зміни фону/кольору
     const variants = {
-        primary: "bg-[#A890F0] hover:bg-[#967deb] text-white py-2.5 px-5 rounded-xl shadow-sm justify-center",
-        secondary: "bg-gray-200 hover:bg-gray-300 text-gray-800 py-2.5 px-6 rounded-xl justify-center",
-        // Повернули світлий ховер hover:bg-gray-50 для ідеального злиття з фоном
-        sidebar: "w-full px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl justify-start",
-        danger: "bg-red-500 hover:bg-red-600 text-white py-2.5 px-5 rounded-xl shadow-sm justify-center"
+        primary: "bg-[#A890F0] text-white py-2.5 px-5 rounded-xl shadow-sm justify-center hover:bg-[#967deb] disabled:hover:bg-[#A890F0]",
+        secondary: "bg-gray-200 text-gray-800 py-2.5 px-6 rounded-xl justify-center hover:bg-gray-300 disabled:hover:bg-gray-200",
+        sidebar: "w-full px-4 py-2 text-gray-600 rounded-xl justify-start hover:bg-gray-50 hover:text-gray-900 disabled:hover:bg-transparent disabled:hover:text-gray-600",
+        danger: "bg-red-500 text-white py-2.5 px-5 rounded-xl shadow-sm justify-center hover:bg-red-600 disabled:hover:bg-red-500"
     };
 
     return (

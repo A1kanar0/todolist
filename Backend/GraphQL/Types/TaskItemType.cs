@@ -15,6 +15,7 @@ public class TaskItemType : ObjectType<TaskItem>
         descriptor.Field(t => t.IsCompleted).Type<NonNullType<BooleanType>>();
         descriptor.Field(t => t.CreatedAt).Type<NonNullType<DateTimeType>>();
         descriptor.Field(t => t.Deadline).Type<DateTimeType>();
+        descriptor.Field(t => t.HasUncompletedChildren).Type<NonNullType<BooleanType>>();
         
         descriptor.Field(t => t.Images)
             .Type<ListType<ObjectType<TaskImage>>>()
