@@ -75,15 +75,14 @@ export default function TaskItem({ task, depth = 0, hideChildren = false, onNavi
                         }`} title={task.title}>
                             {task.title}
                         </span>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0 max-w-[60%] justify-end">
                         {categoryName && (
                             <span className="text-gray-500 text-xs border border-gray-200 px-1.5 py-0.5 rounded-md flex items-center gap-1 truncate max-w-[120px]">
-                                <span className="shrink-0">📁</span>
                                 <span className="truncate">{categoryName}</span>
                             </span>
                         )}
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0 max-w-[60%] justify-end">
                         {executorUsers.length > 0 && (
                             <span
                                 className="text-gray-500 text-xs border border-gray-200 px-1.5 py-0.5 rounded-md flex items-center gap-1 truncate max-w-[150px]"
