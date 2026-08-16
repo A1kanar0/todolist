@@ -68,6 +68,10 @@ interface TaskStore {
     deleteTask: (id: number) => Promise<void>;
     createTask: (input: CreateTaskInput) => Promise<boolean>;
 
+    // Нові функції для категорій
+    createCategory: (name: string) => Promise<boolean>;
+    deleteCategory: (id: number) => Promise<boolean>;
+
     selectedTask: TaskNode | null;
     setSelectedTask: (task: TaskNode | null) => void;
     isCreateModalOpen: boolean;
@@ -121,10 +125,25 @@ const CREATE_TASK_MUTATION = `
   }
 `;
 
-// ОСЬ ЦЯ КОНСТАНТА, ЯКУ Я ЗАБУВ
 const DELETE_TASK_MUTATION = `
   mutation DeleteTask($id: Int!) {
     deleteTask(id: $id)
+  }
+`;
+
+// НОВІ МУТАЦІЇ ДЛЯ КАТЕГОРІЙ
+const CREATE_CATEGORY_MUTATION = `
+  mutation CreateCategory($input: CreateCategoryInput!) {
+    createCategory(input: $input) {
+      id
+      name
+    }
+  }
+`;
+
+const DELETE_CATEGORY_MUTATION = `
+  mutation DeleteCategory($id: Int!) {
+    deleteCategory(id: $id)
   }
 `;
 
@@ -318,6 +337,58 @@ export const useTaskStore = create<TaskStore>((set) => ({
             const errorMessage = error instanceof Error ? error.message : 'Помилка видалення';
             console.error('Помилка видалення:', errorMessage);
             set({ error: errorMessage, isLoading: false });
+        }
+    },
+
+    // --- ЛОГІКА ДЛЯ КАТЕГОРІЙ ---
+    createCategory: async (name) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await fetch('http://localhost:5148/graphql/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    query: CREATE_CATEGORY_MUTATION,
+                    variables: { input: { name } } // Передаємо саме як об'єкт input
+                }),
+            });
+            const result = await response.json();
+
+            if (result.errors) throw new Error(result.errors[0].message);
+
+            await useTaskStore.getState().fetchTasks(); // Оновлюємо список категорій з бази
+            return true;
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Помилка створення категорії';
+            console.error('Помилка створення категорії:', errorMessage);
+            set({ error: errorMessage, isLoading: false });
+            return false;
+        }
+    },
+
+    deleteCategory: async (id) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await fetch('http://localhost:5148/graphql/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    query: DELETE_CATEGORY_MUTATION,
+                    variables: { id } // Видалення приймає просто id (Int!)
+                }),
+            });
+            const result = await response.json();
+            if (result.errors) throw new Error(result.errors[0].message);
+
+            await useTaskStore.getState().fetchTasks(); // Оновлюємо список
+            return true;
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Помилка видалення категорії';
+            console.error('Помилка видалення категорії:', errorMessage);
+            set({ error: errorMessage, isLoading: false });
+            return false;
         }
     },
 
