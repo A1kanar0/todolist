@@ -61,14 +61,6 @@ export default function Notes() {
         );
     };
 
-    // Логіка фільтрації нотаток
-    const filteredNotes = useMemo(() => {
-        if (!searchQuery.trim()) return notes;
-        return notes.filter(note =>
-            note.title?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-    }, [notes, searchQuery]);
-
     return (
         <div className="flex gap-8 h-full">
             <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">

@@ -1,5 +1,5 @@
 // src/utils/api.ts
-const GRAPHQL_URL = 'http://localhost:5148/graphql';
+const GRAPHQL_URL = 'http://localhost:5000/graphql';
 
 export async function fetchGraphQL(query: string, variables: Record<string, any> = {}) {
     const token = localStorage.getItem('token');
